@@ -11,6 +11,7 @@ Live site (GitHub Pages): https://tcmorrismsl-web.github.io/Gifted/
 - **Before you buy** – type a person and a gift idea to check it against everything they've already gotten.
 - **People** – one card per person with groups, next gift, yearly budget and notes.
 - **Ledger** – every gift, searchable and filterable by status, year and occasion.
+- **My private list** – a second tab that only the signed-in account can see, for gifts for each other. It has the same Upcoming, People and Ledger views, and Before you buy checks it alongside the household list. If the database rules aren't the private-list version yet, the tab shows a warning instead of claiming to be private.
 
 Gift statuses: Idea → Bought → Wrapped/ready → Given.
 
@@ -18,7 +19,7 @@ Gift statuses: Idea → Bought → Wrapped/ready → Given.
 
 - Sign-in is **Google** through Firebase Authentication (project `gifted-46f0f`).
 - Data lives in **Cloud Firestore** in that project and syncs live between devices. It also keeps an offline copy, so the page still shows the list without signal.
-- Only the Google accounts listed in `firestore.rules` can read or write anything. To add or remove someone, edit that list and paste the file into Firebase console → Firestore Database → Rules → Publish.
+- Only the Google accounts listed in `firestore.rules` can read or write anything, and each account's private list is readable only by that account. To add or remove someone, edit that list and paste the file into Firebase console → Firestore Database → Rules → Publish.
 - The Firebase config in `index.html` is not a secret; the rules are what protect the data.
 
 ## Files
@@ -34,6 +35,7 @@ Gift statuses: Idea → Bought → Wrapped/ready → Given.
 - `people/<slug of name>` – name, groups (list), budget (yearly $), notes, updatedAt, updatedBy
 - `members/<uid>` – name, email, photo, lastSeen for each signed-in account (used to show who added or changed a gift)
 - `meta/settings` – givers (names offered in the "From" field)
+- `private/<uid>/gifts/<id>` – same fields as `gifts`, readable and writable only by the account with that uid
 
 ## Updating
 
