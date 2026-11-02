@@ -54,6 +54,10 @@ header.top .sub{margin-top:6px;color:var(--muted)}
 .head-actions{display:grid;gap:6px;justify-items:end}
 .head-actions .btns{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
 .status-line{font-size:.82rem;color:var(--muted)}
+.me{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--muted)}
+.me img{width:24px;height:24px;border-radius:50%;object-fit:cover;border:1px solid var(--line)}
+.me b{color:var(--fg);font-weight:600}
+.byline{font-size:.8rem;color:var(--muted)}
 
 /* Group bar */
 .groupbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -197,6 +201,7 @@ header.top .sub{margin-top:6px;color:var(--muted)}
         <button class="btn" id="addPersonBtn" hidden>+ Person</button>
         <button class="btn primary" id="addBtn" hidden>+ Log a gift</button>
       </div>
+      <div class="me" id="meBadge" hidden><img id="meAvatar" alt=""><span id="meText"></span></div>
       <div class="status-line" id="syncNote">Loading your gifts…</div>
     </div>
   </header>
@@ -263,7 +268,7 @@ header.top .sub{margin-top:6px;color:var(--muted)}
   const OCCASIONS=["Christmas","Birthday","Anniversary","Valentine's Day","Mother's Day","Father's Day","Graduation","Wedding","Baby shower","Housewarming","Teacher gift","Thank you","Just because"];
   const STATUS={idea:"Idea",bought:"Bought",ready:"Ready",given:"Given"};
   const NEXT={idea:["bought","Mark bought"],bought:["ready","Mark wrapped"],ready:["given","Mark given"]};
-  const state={gifts:[],people:{},givers:["Tyler","Both"],sel:"",group:"",canWrite:true,db:null,loaded:false,busy:new Set()};
+  const state={gifts:[],people:{},givers:["Tyler","Both"],sel:"",group:"",canWrite:true,db:null,user:null,uid:null,loaded:false,busy:new Set()};
   const $=id=>document.getElementById(id);
   const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const key=n=>String(n||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"unknown";
@@ -391,7 +396,7 @@ header.top .sub{margin-top:6px;color:var(--muted)}
 
   /* ---------- quick advance ---------- */
   async function advance(id,to){const g=state.gifts.find(x=>x.id===id);if(!g||state.busy.has(id))return;state.busy.add(id);renderRuns();
-    const patch={status:to,updatedAt:new Date().toISOString()};
+    const patch={status:to,updatedAt:new Date().toISOString(),updatedBy:state.uid};
     if(to==="given")patch.date=g.due&&g.due<=today()?g.due:today();
     if(to==="bought"&&!g.date)patch.date=today();
     try{await state.db.doc("gifts/"+id).update(patch);toast(STATUS[to]+": "+g.item);}catch(err){toast(errText(err));}
@@ -429,6 +434,7 @@ header.top .sub{margin-top:6px;color:var(--muted)}
       </div>
       <label for="gNotes">Notes<textarea id="gNotes" placeholder="Size, color, gift receipt, where it's hidden…">${esc(g.notes||"")}</textarea></label>
       <div class="hint" id="groupHint" ${mode==="group"?"":"hidden"}></div>
+      ${isNew?"":`<div class="byline" id="gBy"></div>`}
       <div class="err" id="gErr" hidden></div>
       <div class="sheet-actions">
         ${isNew?"":`<button type="button" class="btn danger" id="gDel">Delete</button>`}
@@ -436,6 +442,10 @@ header.top .sub{margin-top:6px;color:var(--muted)}
       </div>
     </form></div>`;
     let status=g.status||"idea";
+    if(!isNew&&state.user){const ids=[g.createdBy,g.updatedBy].filter(Boolean);if(ids.length)state.user.profiles(ids).then(ps=>{const el=$("gBy");if(!el)return;const nm=id=>(ps[id]&&ps[id].name)||"Someone";const parts=[];
+      if(g.createdBy)parts.push("Added by "+nm(g.createdBy)+(g.createdAt?" on "+fmtD(localISO(new Date(g.createdAt))):""));
+      if(g.updatedBy&&(g.updatedBy!==g.createdBy||g.updatedAt!==g.createdAt))parts.push("last changed by "+nm(g.updatedBy)+(g.updatedAt?" on "+fmtD(localISO(new Date(g.updatedAt))):""));
+      el.textContent=parts.join(" · ");});}
     const recipients=()=>mode==="group"?membersOf($("gGroup").value).map(m=>m.name):[$("gWho").value.trim()].filter(Boolean);
     const dup=()=>{const item=$("gItem").value;const hits=[];for(const r of recipients()){const m=matchesFor(r,item,g.id);if(m.length)hits.push({r,m:m[0].g});}
       $("dupWarn").innerHTML=hits.length?`<div class="verdict hit"><strong>Similar gift already logged:</strong><ul>${hits.slice(0,6).map(h=>`<li>${esc(h.r)}: ${esc(h.m.item)} <span>· ${esc(fmtDate(h.m))}</span></li>`).join("")}</ul></div>`:"";
@@ -452,7 +462,7 @@ header.top .sub{margin-top:6px;color:var(--muted)}
     $("giftForm").addEventListener("submit",async e=>{e.preventDefault();const who=recipients(),item=$("gItem").value.trim();
       if(!who.length||!item){showErr(mode==="group"&&!who.length?"Pick a group that has people in it.":"Add who it's for and what the gift is.");return;}
       const priceRaw=$("gPrice").value,date=$("gDate").value,due=$("gDue").value;
-      const base={item,status,from:$("gFrom").value.trim(),occasion:$("gOcc").value.trim(),due,date:date||(g.date&&String(g.date).length!==10?g.date:""),year:date?Number(date.slice(0,4)):(due?Number(due.slice(0,4)):(g.year||null)),price:priceRaw===""?null:Math.round(Number(priceRaw)*100)/100,store:$("gStore").value.trim(),link:$("gLink").value.trim(),notes:$("gNotes").value.trim(),updatedAt:new Date().toISOString()};
+      const base={item,status,from:$("gFrom").value.trim(),occasion:$("gOcc").value.trim(),due,date:date||(g.date&&String(g.date).length!==10?g.date:""),year:date?Number(date.slice(0,4)):(due?Number(due.slice(0,4)):(g.year||null)),price:priceRaw===""?null:Math.round(Number(priceRaw)*100)/100,store:$("gStore").value.trim(),link:$("gLink").value.trim(),notes:$("gNotes").value.trim(),updatedAt:new Date().toISOString(),updatedBy:state.uid,createdBy:isNew?state.uid:(g.createdBy||null)};
       $("gSave").disabled=true;
       try{if(isNew){for(const r of who){await state.db.collection("gifts").add(Object.assign({},base,{recipient:r,createdAt:new Date().toISOString()}));}}
           else await state.db.doc("gifts/"+g.id).set(Object.assign({},base,{recipient:who[0],createdAt:g.createdAt||new Date().toISOString()}));
@@ -487,7 +497,7 @@ header.top .sub{margin-top:6px;color:var(--muted)}
     $("pForm").addEventListener("submit",async e=>{e.preventDefault();const ng=$("newGroup");if(ng&&ng.value.trim()&&!groups.includes(ng.value.trim()))groups.push(ng.value.trim());
       const name=isNew?$("pName").value.trim():p.name;if(!name){const er=$("pErr");er.hidden=false;er.textContent="Add a name.";return;}
       const pk=isNew?key(name):k;if(isNew&&state.people[pk]&&state.people[pk].name){const er=$("pErr");er.hidden=false;er.textContent=`${state.people[pk].name} is already on the list.`;return;}
-      const b=$("pBudget").value;const body={name,groups,budget:b===""?null:Number(b),notes:$("pNotes").value.trim()};
+      const b=$("pBudget").value;const body={name,groups,budget:b===""?null:Number(b),notes:$("pNotes").value.trim(),updatedBy:state.uid,updatedAt:new Date().toISOString()};
       try{await state.db.doc("people/"+pk).set(body);close();toast(isNew?"Added "+name:"Saved");}catch(err){const er=$("pErr");er.hidden=false;er.textContent=errText(err);}});
     setTimeout(()=>{const f=isNew?$("pName"):null;f&&f.focus();},30);}
 
@@ -510,11 +520,14 @@ header.top .sub{margin-top:6px;color:var(--muted)}
   (async()=>{
     if(!window.claude||!window.claude.use){$("syncNote").textContent="Open this page on claude.ai to see and add gifts.";state.canWrite=false;state.loaded=true;renderAll();return;}
     const [db,user]=await Promise.all([window.claude.use("db"),window.claude.use("user")]);
-    if(!db){$("syncNote").textContent="Sign in on claude.ai to see the gift ledger.";state.canWrite=false;state.loaded=true;renderAll();return;}
-    state.db=db;
+    if(!db){$("syncNote").textContent="Sign in to claude.ai, then reopen this page to see the gift ledger.";state.canWrite=false;state.loaded=true;renderAll();return;}
+    state.db=db;state.user=user;
     try{const cw=user&&user.can?await user.can("data.write"):null;if(cw===false)state.canWrite=false;}catch(e){}
+    if(user){const me=await user.me();state.uid=me.id;$("meAvatar").src=me.avatarUrl;$("meText").textContent="";
+      const t=document.createElement("span");t.append("Signed in as ");const b=document.createElement("b");b.textContent=me.name||"you";t.append(b);$("meText").append(t);$("meBadge").hidden=false;}
+    if(!state.canWrite)$("syncNote").textContent="View only. Ask the page owner for edit access to add gifts.";
     const timer=setTimeout(()=>{if(!state.loaded){$("syncNote").textContent="Can't reach the ledger yet. It will fill in once the connection catches up.";}},10000);
-    db.collection("gifts").onSnapshot(snap=>{state.gifts=snap.docs.map(d=>({id:d.id,...d.data()}));if(!snap.metadata.fromCache){clearTimeout(timer);state.loaded=true;$("syncNote").textContent=state.canWrite?"Synced · shared with everyone on this page":"View only";}else if(state.gifts.length)state.loaded=true;renderAll();},
+    db.collection("gifts").onSnapshot(snap=>{state.gifts=snap.docs.map(d=>({id:d.id,...d.data()}));if(!snap.metadata.fromCache){clearTimeout(timer);state.loaded=true;$("syncNote").textContent=state.canWrite?"Synced · shared with everyone on this page":"View only. Ask the page owner for edit access to add gifts.";}else if(state.gifts.length)state.loaded=true;renderAll();},
       err=>{clearTimeout(timer);state.loaded=true;$("syncNote").textContent=err.code==="revoked"?"Access to this ledger changed.":"Lost connection to the ledger. Reload to try again.";renderAll();});
     db.collection("people").onSnapshot(snap=>{const m={};snap.docs.forEach(d=>m[d.id]=d.data());state.people=m;renderAll();},()=>{});
     db.doc("meta/settings").onSnapshot(s=>{const d=s.exists?s.data():null;if(d&&Array.isArray(d.givers)&&d.givers.length){state.givers=d.givers;renderDatalists();}},()=>{});

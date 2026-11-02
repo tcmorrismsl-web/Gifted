@@ -12,6 +12,12 @@ The live page is a private claude.ai artifact: https://claude.ai/artifact/4iFyrG
 - **People** – one card per person with groups, next gift, yearly budget and notes.
 - **Ledger** – every gift, searchable and filterable by status, year and occasion.
 
+## Sign-in and sharing
+
+There is no separate username or password. The page uses each person's claude.ai account: whoever opens it signed in sees the same ledger, edits sync live for everyone, and the header shows who is signed in. Each gift records who added it and who last changed it (shown at the bottom of the gift's edit sheet).
+
+To let someone else add and edit gifts, share the page with them from its Share menu as an **Editor** (invite them by email). People shared as Viewer or Commenter can see the ledger but not change it.
+
 Gift statuses: Idea → Bought → Wrapped/ready → Given.
 
 ## Files
@@ -20,8 +26,8 @@ Gift statuses: Idea → Bought → Wrapped/ready → Given.
 
 ## Data model (artifact database)
 
-- `gifts/<id>` – recipient, item, status (`idea` | `bought` | `ready` | `given`), from, occasion, due (give-on date, `YYYY-MM-DD`), date (date bought or given), year, price, store, link, notes, createdAt, updatedAt
-- `people/<slug of name>` – name, groups (list), budget (yearly $), notes
+- `gifts/<id>` – recipient, item, status (`idea` | `bought` | `ready` | `given`), from, occasion, due (give-on date, `YYYY-MM-DD`), date (date bought or given), year, price, store, link, notes, createdAt, createdBy, updatedAt, updatedBy (person ids, never names)
+- `people/<slug of name>` – name, groups (list), budget (yearly $), notes, updatedAt, updatedBy
 - `meta/settings` – givers (names offered in the "From" field)
 
 ## Updating
