@@ -11,6 +11,7 @@ Live site (GitHub Pages): https://tcmorrismsl-web.github.io/Gifted/
 - **Before you buy** – type a person and a gift idea to check it against everything they've already gotten.
 - **People** – one card per person with groups, next gift, yearly budget and notes.
 - **Ledger** – every gift, searchable and filterable by status, year and occasion.
+- **On the way** – every gift marked as shipping, soonest arrival first, with a Track button that opens the carrier's page (UPS, USPS, FedEx, Amazon and DHL are recognized from the tracking number) and a one-tap Arrived button. It flags packages expected after their give-on date, packages past their expected arrival, and gifts still on the way within 3 days of being given. The same flags show in Upcoming, where *Mark arrived* comes before *Mark wrapped*.
 - **My private list** – a second tab that only the signed-in account can see, for gifts for each other. It has the same Upcoming, People and Ledger views, and Before you buy checks it alongside the household list. If the database rules aren't the private-list version yet, the tab shows a warning instead of claiming to be private.
 
 Gift statuses: Idea → Bought → Wrapped/ready → Given.
@@ -31,7 +32,7 @@ Gift statuses: Idea → Bought → Wrapped/ready → Given.
 
 ## Data model (Firestore)
 
-- `gifts/<id>` – recipient, item, status (`idea` | `bought` | `ready` | `given`), from, occasion, due (give-on date, `YYYY-MM-DD`), date (date bought or given), year, price, store, link, notes, createdAt, createdBy, updatedAt, updatedBy (Firebase user ids)
+- `gifts/<id>` – recipient, item, status (`idea` | `bought` | `ready` | `given`), from, occasion, due (give-on date, `YYYY-MM-DD`), date (date bought or given), year, price, store, link, notes, ship (`` | `on_way` | `arrived`), tracking, carrier (blank = detect from the number), arrives (expected arrival), arrivedOn, createdAt, createdBy, updatedAt, updatedBy (Firebase user ids)
 - `people/<slug of name>` – name, groups (list), budget (yearly $), notes, updatedAt, updatedBy
 - `members/<uid>` – name, email, photo, lastSeen for each signed-in account (used to show who added or changed a gift)
 - `meta/settings` – givers (names offered in the "From" field)

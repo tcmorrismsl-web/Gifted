@@ -118,6 +118,14 @@ header.top .sub{margin-top:6px;color:var(--muted)}
 .run-row .what{min-width:0;overflow-wrap:anywhere}
 .run-row .what small{display:block;color:var(--muted);font-size:.8rem}
 .run-row .next{justify-self:end}
+.ship{display:block;font-size:.8rem;color:var(--muted)}
+.ship a{color:var(--accent);font-weight:600}
+.ship.warn{color:var(--warn)}
+.ship.warn b{font-weight:600}
+.ow-when{font-size:.82rem;color:var(--muted)}
+.ow-when.warn{color:var(--warn);font-weight:600}
+.ow-acts{display:flex;gap:6px;justify-self:end;flex-wrap:wrap}
+a.btn{text-decoration:none;color:var(--fg);display:inline-block}
 .run-missing{padding:10px 16px;border-top:1px dashed var(--line);background:var(--sunk);display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:.88rem}
 .run-missing .lab{color:var(--warn);font-weight:600}
 .addfor{border:1px dashed var(--muted);background:transparent;border-radius:999px;padding:2px 10px;cursor:pointer;font-size:.82rem}
@@ -252,6 +260,14 @@ header.top .sub{margin-top:6px;color:var(--muted)}
 
   <nav class="groupbar" id="groupbar" aria-label="Groups"></nav>
 
+  <section aria-labelledby="owTitle" id="owSection" hidden>
+    <div class="section-head">
+      <h2 id="owTitle">On the way</h2>
+      <span class="muted" id="owNote"></span>
+    </div>
+    <div class="run" id="onway"></div>
+  </section>
+
   <section aria-labelledby="upTitle">
     <div class="section-head">
       <h2 id="upTitle">Upcoming</h2>
@@ -291,7 +307,7 @@ header.top .sub{margin-top:6px;color:var(--muted)}
     <div class="filters">
       <input id="fSearch" placeholder="Search gifts, stores, notes" autocomplete="off">
       <select id="fStatus" aria-label="Status">
-        <option value="">All statuses</option><option value="idea">Ideas</option><option value="bought">Bought</option><option value="ready">Ready</option><option value="given">Given</option>
+        <option value="">All statuses</option><option value="idea">Ideas</option><option value="bought">Bought</option><option value="ready">Ready</option><option value="given">Given</option><option value="onway">On the way</option>
       </select>
       <select id="fYear" aria-label="Year"><option value="">All years</option></select>
       <select id="fOcc" aria-label="Occasion"><option value="">All occasions</option></select>
@@ -329,6 +345,27 @@ const firebaseConfig = {
   const $=id=>document.getElementById(id);
   const allGifts=()=>state.shared.concat(state.priv);
   const giftCol=()=>state.space==="private"?"private/"+state.uid+"/gifts":"gifts";
+  const CARRIERS={ups:"UPS",usps:"USPS",fedex:"FedEx",amazon:"Amazon",dhl:"DHL",other:"Other"};
+  function detectCarrier(n){n=String(n||"").replace(/\s+/g,"").toUpperCase();if(!n)return"";
+    if(/^1Z[0-9A-Z]{16}$/.test(n))return"ups";
+    if(/^TBA\d{9,15}$/.test(n))return"amazon";
+    if(/^[A-Z]{2}\d{9}US$/.test(n)||/^9[1-5]\d{18,24}$/.test(n)||/^82\d{8}$/.test(n))return"usps";
+    if(/^96\d{20}$/.test(n)||/^\d{12}$/.test(n)||/^\d{15}$/.test(n))return"fedex";
+    if(/^\d{10}$/.test(n))return"dhl";
+    return"other";}
+  const carrierOf=g=>g.carrier||detectCarrier(g.tracking);
+  function trackUrl(g){const n=String(g.tracking||"").replace(/\s+/g,"");if(!n)return"";const e=encodeURIComponent(n);
+    switch(carrierOf(g)){case"ups":return"https://www.ups.com/track?tracknum="+e;case"usps":return"https://tools.usps.com/go/TrackConfirmAction?tLabels="+e;case"fedex":return"https://www.fedex.com/fedextrack/?trknbr="+e;case"amazon":return"https://track.amazon.com/tracking/"+e;case"dhl":return"https://www.dhl.com/us-en/home/tracking/tracking-express.html?submit=1&tracking-id="+e;default:return"https://www.google.com/search?q="+encodeURIComponent(n+" tracking");}}
+  function shipIssue(g){if(g.ship!=="on_way"||g.status==="given")return"";const t=today();
+    if(g.arrives&&g.due&&g.arrives>g.due)return"Arrives after the give-on date";
+    if(g.arrives&&g.arrives<t)return"Was due "+fmtD(g.arrives,{month:"short",day:"numeric"})+", check tracking";
+    if(!g.arrives&&g.due&&daysUntil(g.due)<=3)return"Still on the way";
+    return"";}
+  function shipLine(g){if(!g.ship&&!g.tracking)return"";const n=String(g.tracking||"").replace(/\s+/g,"");const c=carrierOf(g);
+    const label=g.ship==="arrived"?"Arrived":g.ship==="on_way"?("On the way"+(g.arrives?" · expected "+fmtD(g.arrives,{month:"short",day:"numeric"}):"")):"";
+    const iss=shipIssue(g);
+    return `<small class="ship${iss?" warn":""}">${esc(label)}${n?`${label?" · ":""}${esc(CARRIERS[c]||"")} ···${esc(n.slice(-4))} <a href="${esc(trackUrl(g))}" target="_blank" rel="noopener">Track</a>`:""}${iss?` · <b>${esc(iss)}</b>`:""}</small>`;}
+  const nextStep=g=>(g.status==="bought"&&g.ship==="on_way")?["arrived","Mark arrived"]:NEXT[g.status];
   function applySpace(){state.gifts=state.space==="private"?state.priv:state.shared;}
   const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const key=n=>String(n||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"unknown";
@@ -374,7 +411,18 @@ const firebaseConfig = {
     el.innerHTML=`<button class="chip" data-group="" aria-pressed="${!state.group}">Everyone</button>`+gs.map(g=>`<button class="chip" data-group="${esc(g.name)}" aria-pressed="${state.group===g.name}">${esc(g.name)}<span>${g.count}</span></button>`).join("");}
 
   /* ---------- render: upcoming ---------- */
-  function renderRuns(){const el=$("runs");
+  function renderOnWay(){const sec=$("owSection");
+    const items=state.gifts.filter(g=>g.ship==="on_way"&&g.status!=="given"&&inGroup(g.recipient)).sort((a,b)=>(a.arrives||"9999").localeCompare(b.arrives||"9999"));
+    sec.hidden=!state.loaded||!items.length;if(sec.hidden)return;
+    const late=items.filter(g=>shipIssue(g)).length;
+    $("owNote").textContent=`${items.length} package${items.length===1?"":"s"}${late?` · ${late} need${late===1?"s":""} a look`:""}`;
+    $("onway").innerHTML=items.map(g=>{const iss=shipIssue(g);const u=trackUrl(g);const n=String(g.tracking||"").replace(/\s+/g,"");return `<div class="run-row">
+      <div class="who">${esc(g.recipient)}</div>
+      <div class="what">${esc(g.item)}<small class="ship">${n?esc(CARRIERS[carrierOf(g)]||"")+" ···"+esc(n.slice(-4)):"No tracking number"}${g.due?" · give on "+esc(fmtD(g.due,{month:"short",day:"numeric"})):""}</small></div>
+      <div class="ow-when${iss?" warn":""}">${iss?esc(iss):g.arrives?"Expected "+esc(fmtD(g.arrives,{month:"short",day:"numeric"})):"No arrival date"}</div>
+      <div class="ow-acts">${u?`<a class="btn sm" href="${esc(u)}" target="_blank" rel="noopener">Track</a>`:""}${state.canWrite?`<button class="btn sm" data-adv="${esc(g.id)}" data-to="arrived" ${state.busy.has(g.id)?"disabled":""}>Arrived</button><button class="btn ghost sm" data-edit="${esc(g.id)}">Edit</button>`:""}</div>
+    </div>`;}).join("");}
+  function renderRuns(){renderOnWay();const el=$("runs");
     if(!state.loaded){el.innerHTML=`<div class="empty card">Loading upcoming gifts…</div>`;return;}
     const t=today();
     const dated=state.gifts.filter(g=>g.due&&inGroup(g.recipient));
@@ -385,14 +433,14 @@ const firebaseConfig = {
     let open=0;
     el.innerHTML=keys.map(d=>{const gs=buckets[d].slice().sort((a,b)=>a.recipient.localeCompare(b.recipient));const n=gs.length;
       const c={idea:0,bought:0,ready:0,given:0};gs.forEach(g=>c[g.status]=(c[g.status]||0)+1);
-      const dleft=daysUntil(d);const allDone=c.given===n;const late=dleft<0&&!allDone;const soon=dleft<=3&&(c.idea+c.bought)>0;
+      const dleft=daysUntil(d);const allDone=c.given===n;const late=dleft<0&&!allDone;const onway=gs.filter(g=>g.status==="bought"&&g.ship==="on_way").length;const issues=gs.some(g=>shipIssue(g));const soon=(dleft<=3&&(c.idea+c.bought)>0)||issues;
       if(!allDone)open+=n-c.given;
       const occs=[...new Set(gs.map(g=>g.occasion).filter(Boolean))].join(" · ")||"Gifts going out";
       const recips=new Set(gs.map(g=>key(g.recipient)));
       const grp=state.group?[state.group]:[...new Set([...recips].flatMap(groupsOf))];
       const missing=[];const seen=new Set();for(const gr of grp)for(const m of membersOf(gr))if(!recips.has(m.key)&&!seen.has(m.key)){seen.add(m.key);missing.push(m);}
       const dt=parseD(d);
-      const summary=allDone?"All given":[c.idea&&`${c.idea} to buy`,c.bought&&`${c.bought} to wrap`,c.ready&&`${c.ready} ready`].filter(Boolean).join(" · ");
+      const summary=allDone?"All given":[c.idea&&`${c.idea} to buy`,onway&&`${onway} on the way`,(c.bought-onway)&&`${c.bought-onway} to wrap`,c.ready&&`${c.ready} ready`].filter(Boolean).join(" · ");
       const pct=x=>(x/n*100).toFixed(1)+"%";
       return `<article class="run${allDone?" done":""}${late?" late":""}">
         <div class="run-head">
@@ -400,9 +448,9 @@ const firebaseConfig = {
           <div class="run-title"><h3>${esc(occs)}</h3><div class="when${soon||late?" soon":""}">${esc(dt.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"}))} · ${relDays(dleft)}${soon&&!late?" · needs attention":""}</div></div>
           <div class="meter"><span class="num">${c.ready+c.given} of ${n} ready</span><span class="bar" role="img" aria-label="${esc(summary)}"><i class="g" style="width:${pct(c.given)}"></i><i class="r" style="width:${pct(c.ready)}"></i><i class="b" style="width:${pct(c.bought)}"></i></span><span class="num">${esc(summary)}</span></div>
         </div>
-        ${allDone&&!missing.length?"":gs.map(g=>{const nx=NEXT[g.status];const link=safeLink(g.link);return `<div class="run-row">
+        ${allDone&&!missing.length?"":gs.map(g=>{const nx=nextStep(g);const link=safeLink(g.link);return `<div class="run-row">
           <div class="who">${esc(g.recipient)}</div>
-          <div class="what">${esc(g.item)}${(g.store||link)?`<small>${esc(g.store||"")}${g.store&&link?" · ":""}${link?`<a href="${esc(link)}" target="_blank" rel="noopener">${esc(host(link))}</a>`:""}</small>`:""}</div>
+          <div class="what">${esc(g.item)}${(g.store||link)?`<small>${esc(g.store||"")}${g.store&&link?" · ":""}${link?`<a href="${esc(link)}" target="_blank" rel="noopener">${esc(host(link))}</a>`:""}</small>`:""}${shipLine(g)}</div>
           <div class="st"><span class="pill ${esc(g.status)}">${STATUS[g.status]||esc(g.status)}</span></div>
           <div class="next">${state.canWrite&&nx?`<button class="btn sm" data-adv="${esc(g.id)}" data-to="${nx[0]}" ${state.busy.has(g.id)?"disabled":""}>${nx[1]}</button>`:(state.canWrite?`<button class="btn ghost sm" data-edit="${esc(g.id)}">Edit</button>`:"")}</div>
         </div>`;}).join("")}
@@ -428,7 +476,7 @@ const firebaseConfig = {
         ${budget?`<span class="meta num">${money(p.spent)} of ${money(budget)} in ${thisYear}</span><span class="bar"><i class="${p.spent>budget?"over":"g"}" style="width:${pct}%"></i></span>`:(p.spent?`<span class="meta num">${money(p.spent)} spent in ${thisYear}</span>`:"")}
       </button>`;}).join("");}
   function filtered(){const q=$("fSearch").value.trim().toLowerCase(),st=$("fStatus").value,yr=$("fYear").value,oc=$("fOcc").value;
-    return state.gifts.filter(g=>(!state.sel||key(g.recipient)===state.sel)&&inGroup(g.recipient)&&(!st||g.status===st)&&(!yr||yearOf(g)===+yr)&&(!oc||g.occasion===oc)&&(!q||[g.item,g.recipient,g.store,g.notes,g.occasion,g.from].join(" ").toLowerCase().includes(q))).sort((a,b)=>sortKey(b).localeCompare(sortKey(a)));}
+    return state.gifts.filter(g=>(!state.sel||key(g.recipient)===state.sel)&&inGroup(g.recipient)&&(!st||(st==="onway"?(g.ship==="on_way"&&g.status!=="given"):g.status===st))&&(!yr||yearOf(g)===+yr)&&(!oc||g.occasion===oc)&&(!q||[g.item,g.recipient,g.store,g.notes,g.occasion,g.from].join(" ").toLowerCase().includes(q))).sort((a,b)=>sortKey(b).localeCompare(sortKey(a)));}
   function whenCell(g){if(g.status!=="given"&&g.due)return `<b>Give on</b>${esc(fmtD(g.due))}`;if(g.status==="given")return (g.date||g.due)?`<b>Given</b>${esc(fmtD(g.date||g.due))}`:(g.year?esc(g.year):"—");return g.date?`<b>Bought</b>${esc(fmtD(g.date))}`:"—";}
   function renderLedger(){const el=$("ledger");
     if(!state.loaded){el.innerHTML=`<div class="empty"><h3>Opening the ledger…</h3><div>Your gifts will appear here in a moment.</div></div>`;return;}
@@ -440,7 +488,7 @@ const firebaseConfig = {
     el.innerHTML=head+rows.map(g=>{const link=safeLink(g.link);return `<div class="row">
       <div class="when num">${whenCell(g)}</div>
       <div class="who">${esc(g.recipient)}</div>
-      <div class="what">${esc(g.item)}${(g.store||link)?`<small>${esc(g.store||"")}${g.store&&link?" · ":""}${link?`<a href="${esc(link)}" target="_blank" rel="noopener">${esc(host(link))}</a>`:""}</small>`:""}${g.notes?`<small>${esc(g.notes)}</small>`:""}</div>
+      <div class="what">${esc(g.item)}${(g.store||link)?`<small>${esc(g.store||"")}${g.store&&link?" · ":""}${link?`<a href="${esc(link)}" target="_blank" rel="noopener">${esc(host(link))}</a>`:""}</small>`:""}${g.notes?`<small>${esc(g.notes)}</small>`:""}${shipLine(g)}</div>
       <div class="occ">${esc(g.occasion||"—")}${g.from?`<small>from ${esc(g.from)}</small>`:""}</div>
       <div class="st"><span class="pill ${esc(g.status)}">${STATUS[g.status]||esc(g.status)}</span></div>
       <div class="price num">${money(g.price)||'<span class="muted">—</span>'}</div>
@@ -456,10 +504,12 @@ const firebaseConfig = {
 
   /* ---------- quick advance ---------- */
   async function advance(id,to){const g=state.gifts.find(x=>x.id===id);if(!g||state.busy.has(id))return;state.busy.add(id);renderRuns();
-    const patch={status:to,updatedAt:new Date().toISOString(),updatedBy:state.uid};
-    if(to==="given")patch.date=g.due&&g.due<=today()?g.due:today();
-    if(to==="bought"&&!g.date)patch.date=today();
-    try{await state.db.doc(g._col+"/"+id).update(patch);toast(STATUS[to]+": "+g.item);}catch(err){toast(errText(err));}
+    const patch={updatedAt:new Date().toISOString(),updatedBy:state.uid};
+    if(to==="arrived"){patch.ship="arrived";patch.arrivedOn=today();}
+    else{patch.status=to;if((to==="ready"||to==="given")&&g.ship==="on_way"){patch.ship="arrived";patch.arrivedOn=today();}
+      if(to==="given")patch.date=g.due&&g.due<=today()?g.due:today();
+      if(to==="bought"&&!g.date)patch.date=today();}
+    try{await state.db.doc(g._col+"/"+id).update(patch);toast((to==="arrived"?"Arrived":STATUS[to])+": "+g.item);}catch(err){toast(errText(err));}
     finally{state.busy.delete(id);renderRuns();}}
 
   /* ---------- gift sheet ---------- */
@@ -492,6 +542,16 @@ const firebaseConfig = {
         <label for="gStore">Where bought<input id="gStore" value="${esc(g.store||"")}" placeholder="Store or site" autocomplete="off"></label>
         <label for="gLink">Link<input id="gLink" value="${esc(g.link||"")}" placeholder="https://…" autocomplete="off"></label>
       </div>
+      <div>
+        <div class="eyebrow" style="margin-bottom:4px">Shipping</div>
+        <div class="seg" id="gShip" role="group" aria-label="Shipping">${[["","Not shipped"],["on_way","On the way"],["arrived","Arrived"]].map(([k,l])=>`<button type="button" data-sh="${k}" aria-pressed="${(g.ship||"")===k}">${l}</button>`).join("")}</div>
+      </div>
+      <div class="grid3">
+        <label for="gTrack">Tracking number<input id="gTrack" value="${esc(g.tracking||"")}" placeholder="From the shipping email" autocomplete="off" autocapitalize="characters" spellcheck="false"></label>
+        <label for="gCarrier">Carrier<select id="gCarrier"><option value="">Detect automatically</option>${Object.entries(CARRIERS).map(([k,l])=>`<option value="${k}" ${g.carrier===k?"selected":""}>${l}</option>`).join("")}</select></label>
+        <label for="gArrives">Expected arrival<input id="gArrives" type="date" value="${esc(g.arrives||"")}"></label>
+      </div>
+      <div class="hint" id="shipHint" hidden></div>
       <label for="gNotes">Notes<textarea id="gNotes" placeholder="Size, color, gift receipt, where it's hidden…">${esc(g.notes||"")}</textarea></label>
       <div class="hint" id="groupHint" ${mode==="group"?"":"hidden"}></div>
       ${isNew?"":`<div class="byline" id="gBy"></div>`}
@@ -512,6 +572,15 @@ const firebaseConfig = {
       if(mode==="group"){const n=recipients().length;$("groupHint").textContent=n?`Saves ${n} separate entries, one per person: ${recipients().join(", ")}.`:"This group has nobody in it yet.";}};
     $("gWho").addEventListener("input",dup);$("gItem").addEventListener("input",dup);if($("gGroup"))$("gGroup").addEventListener("change",dup);dup();
     if($("forPick"))$("forPick").addEventListener("click",e=>{const b=e.target.closest("[data-mode]");if(!b)return;mode=b.dataset.mode;[...$("forPick").children].forEach(x=>x.setAttribute("aria-pressed",x===b));$("whoWrap").hidden=mode==="group";$("groupWrap").hidden=mode!=="group";$("groupHint").hidden=mode!=="group";dup();});
+    let ship=g.ship||"";
+    const setShip=v=>{ship=v;[...$("gShip").children].forEach(x=>x.setAttribute("aria-pressed",x.dataset.sh===v));};
+    $("gShip").addEventListener("click",e=>{const b=e.target.closest("[data-sh]");if(b){setShip(b.dataset.sh);shipHint();}});
+    function shipHint(){const n=$("gTrack").value.trim(),h=$("shipHint");const msgs=[];
+      if(n&&!$("gCarrier").value){const c=detectCarrier(n);msgs.push(c==="other"?"Couldn't tell the carrier from this number. Pick one, or Track will search for it.":"Looks like a "+CARRIERS[c]+" number.");}
+      const a=$("gArrives").value,d=$("gDue").value;if(ship==="on_way"&&a&&d&&a>d)msgs.push("Expected arrival is after the give-on date.");
+      h.textContent=msgs.join(" ");h.hidden=!msgs.length;}
+    $("gTrack").addEventListener("input",()=>{if($("gTrack").value.trim()&&!ship)setShip("on_way");shipHint();});
+    ["gCarrier","gArrives","gDue"].forEach(id=>$(id).addEventListener("input",shipHint));shipHint();
     $("gStatus").addEventListener("click",e=>{const b=e.target.closest("[data-st]");if(!b)return;status=b.dataset.st;[...$("gStatus").children].forEach(x=>x.setAttribute("aria-pressed",x===b));});
     const close=()=>{sh.innerHTML="";document.removeEventListener("keydown",onEsc);};
     function onEsc(e){if(e.key==="Escape")close();}
@@ -522,7 +591,8 @@ const firebaseConfig = {
     $("giftForm").addEventListener("submit",async e=>{e.preventDefault();const who=recipients(),item=$("gItem").value.trim();
       if(!who.length||!item){showErr(mode==="group"&&!who.length?"Pick a group that has people in it.":"Add who it's for and what the gift is.");return;}
       const priceRaw=$("gPrice").value,date=$("gDate").value,due=$("gDue").value;
-      const base={item,status,from:$("gFrom").value.trim(),occasion:$("gOcc").value.trim(),due,date:date||(g.date&&String(g.date).length!==10?g.date:""),year:date?Number(date.slice(0,4)):(due?Number(due.slice(0,4)):(g.year||null)),price:priceRaw===""?null:Math.round(Number(priceRaw)*100)/100,store:$("gStore").value.trim(),link:$("gLink").value.trim(),notes:$("gNotes").value.trim(),updatedAt:new Date().toISOString(),updatedBy:state.uid,createdBy:isNew?state.uid:(g.createdBy||null)};
+      if(ship&&status==="idea")status="bought";
+      const base={item,status,from:$("gFrom").value.trim(),occasion:$("gOcc").value.trim(),due,date:date||(g.date&&String(g.date).length!==10?g.date:""),year:date?Number(date.slice(0,4)):(due?Number(due.slice(0,4)):(g.year||null)),price:priceRaw===""?null:Math.round(Number(priceRaw)*100)/100,store:$("gStore").value.trim(),link:$("gLink").value.trim(),notes:$("gNotes").value.trim(),ship,tracking:$("gTrack").value.trim().replace(/\s+/g,""),carrier:$("gCarrier").value,arrives:$("gArrives").value,arrivedOn:ship==="arrived"?(g.arrivedOn||today()):"",updatedAt:new Date().toISOString(),updatedBy:state.uid,createdBy:isNew?state.uid:(g.createdBy||null)};
       $("gSave").disabled=true;
       try{if(isNew){for(const r of who){await state.db.collection(giftCol()).add(Object.assign({},base,{recipient:r,createdAt:new Date().toISOString()}));}}
           else await state.db.doc(g._col+"/"+g.id).set(Object.assign({},base,{recipient:who[0],createdAt:g.createdAt||new Date().toISOString()}));
@@ -579,6 +649,8 @@ const firebaseConfig = {
   $("groupbar").addEventListener("click",e=>{const b=e.target.closest("[data-group]");if(!b)return;state.group=b.dataset.group;state.sel="";renderGroups();renderRuns();renderPeople();renderLedger();});
   $("people").addEventListener("click",e=>{const t=e.target.closest("[data-person]");if(!t)return;const k=t.dataset.person;
     if(state.sel===k){openPerson(k);}else{state.sel=k;renderPeople();renderLedger();}});
+  $("onway").addEventListener("click",e=>{const a=e.target.closest("[data-adv]");if(a){advance(a.dataset.adv,a.dataset.to);return;}
+    const ed=e.target.closest("[data-edit]");if(ed)openGift(state.gifts.find(g=>g.id===ed.dataset.edit));});
   $("runs").addEventListener("click",e=>{const a=e.target.closest("[data-adv]");if(a){advance(a.dataset.adv,a.dataset.to);return;}
     const ed=e.target.closest("[data-edit]");if(ed){openGift(state.gifts.find(g=>g.id===ed.dataset.edit));return;}
     const af=e.target.closest("[data-addfor]");if(af)openGift(null,{recipient:af.dataset.addfor,due:af.dataset.due,occasion:af.dataset.occ});});
