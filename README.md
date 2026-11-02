@@ -2,7 +2,7 @@
 
 A shared household gift ledger, so nobody gets the same gift twice and everything is bought and wrapped before the day it goes out.
 
-The live page is a private claude.ai artifact: https://claude.ai/artifact/4iFyrGXca8sL5PNH2ZC8nU
+Live site (GitHub Pages): https://tcmorrismsl-web.github.io/Gifted/
 
 ## What's on the page
 
@@ -12,24 +12,29 @@ The live page is a private claude.ai artifact: https://claude.ai/artifact/4iFyrG
 - **People** – one card per person with groups, next gift, yearly budget and notes.
 - **Ledger** – every gift, searchable and filterable by status, year and occasion.
 
-## Sign-in and sharing
-
-There is no separate username or password. The page uses each person's claude.ai account: whoever opens it signed in sees the same ledger, edits sync live for everyone, and the header shows who is signed in. Each gift records who added it and who last changed it (shown at the bottom of the gift's edit sheet).
-
-To let someone else add and edit gifts, share the page with them from its Share menu as an **Editor** (invite them by email). People shared as Viewer or Commenter can see the ledger but not change it.
-
 Gift statuses: Idea → Bought → Wrapped/ready → Given.
+
+## Sign-in and data
+
+- Sign-in is **Google** through Firebase Authentication (project `gifted-46f0f`).
+- Data lives in **Cloud Firestore** in that project and syncs live between devices. It also keeps an offline copy, so the page still shows the list without signal.
+- Only the Google accounts listed in `firestore.rules` can read or write anything. To add or remove someone, edit that list and paste the file into Firebase console → Firestore Database → Rules → Publish.
+- The Firebase config in `index.html` is not a secret; the rules are what protect the data.
 
 ## Files
 
-- `gifted.html` – the artifact source. It is published to claude.ai, which wraps it in the HTML skeleton and provides the `db` and `user` runtime capabilities. Opened outside claude.ai, the page loads but shows no data.
+- `index.html` – the site (GitHub Pages serves it from `main`, root folder).
+- `firestore.rules` – database access rules; paste into the Firebase console whenever they change.
+- `manifest.webmanifest`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png` – lets you add Gifted to a phone's home screen like an app.
+- `gifted.html` – the earlier claude.ai artifact version (uses claude.ai's built-in storage instead of Firebase). Kept for reference.
 
-## Data model (artifact database)
+## Data model (Firestore)
 
-- `gifts/<id>` – recipient, item, status (`idea` | `bought` | `ready` | `given`), from, occasion, due (give-on date, `YYYY-MM-DD`), date (date bought or given), year, price, store, link, notes, createdAt, createdBy, updatedAt, updatedBy (person ids, never names)
+- `gifts/<id>` – recipient, item, status (`idea` | `bought` | `ready` | `given`), from, occasion, due (give-on date, `YYYY-MM-DD`), date (date bought or given), year, price, store, link, notes, createdAt, createdBy, updatedAt, updatedBy (Firebase user ids)
 - `people/<slug of name>` – name, groups (list), budget (yearly $), notes, updatedAt, updatedBy
+- `members/<uid>` – name, email, photo, lastSeen for each signed-in account (used to show who added or changed a gift)
 - `meta/settings` – givers (names offered in the "From" field)
 
 ## Updating
 
-Edit `gifted.html`, then republish it to the same artifact URL from Claude so the link and the stored data stay the same.
+Edit `index.html`, commit and push to `main`. GitHub Pages republishes within a minute or two.

@@ -1,0 +1,18 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Only these Google accounts can read or write anything in Gifted.
+    function isHousehold() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.lower() in [
+          'tcmorris.msl@gmail.com',
+          'twmorris.2021@gmail.com',
+          'whitneyamburgey3@gmail.com'
+        ];
+    }
+    match /{document=**} {
+      allow read, write: if isHousehold();
+    }
+  }
+}
