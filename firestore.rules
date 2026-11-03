@@ -22,6 +22,9 @@ service cloud.firestore {
     match /meta/{docId} {
       allow read, write: if isHousehold();
     }
+    match /events/{eventId} {
+      allow read, write: if isHousehold();
+    }
 
     // Who's who: everyone in the household can read; each account writes only its own entry.
     match /members/{uid} {

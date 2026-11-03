@@ -130,6 +130,11 @@ a.btn{text-decoration:none;color:var(--fg);display:inline-block}
 label.opt{display:flex;flex-direction:row;align-items:center;gap:8px;color:var(--fg);font-size:.9rem;font-weight:500;cursor:pointer}
 label.opt input{width:18px;height:18px;margin:0;accent-color:var(--accent)}
 .gtag.date{background:var(--accent-soft);color:var(--accent)}
+.ev-line{font-size:.82rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:2px 8px;align-items:center;margin-top:4px}
+.ev-line b{color:var(--fg);font-weight:600}
+.ev-line .btn{padding:2px 8px;font-size:.78rem}
+.pchips{display:flex;flex-wrap:wrap;gap:6px}
+.pchips .chip{font-size:.82rem;padding:3px 10px}
 .run-missing{padding:10px 16px;border-top:1px dashed var(--line);background:var(--sunk);display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:.88rem}
 .run-missing .lab{color:var(--warn);font-weight:600}
 .addfor{border:1px dashed var(--muted);background:transparent;border-radius:999px;padding:2px 10px;cursor:pointer;font-size:.82rem}
@@ -249,6 +254,7 @@ label.opt input{width:18px;height:18px;margin:0;accent-color:var(--accent)}
     <div class="head-actions">
       <div class="btns">
         <button class="btn" id="addPersonBtn" hidden>+ Person</button>
+        <button class="btn" id="addEventBtn" hidden>+ Event</button>
         <button class="btn primary" id="addBtn" hidden>+ Log a gift</button>
       </div>
       <div class="me" id="meBadge" hidden><img id="meAvatar" alt="" hidden><span id="meText"></span><button class="btn ghost sm" id="signOutBtn">Sign out</button></div>
@@ -342,10 +348,10 @@ const firebaseConfig = {
 };
 
 (function(){
-  const OCCASIONS=["Christmas","Birthday","Anniversary","Valentine's Day","Mother's Day","Father's Day","Graduation","Wedding","Baby shower","Housewarming","Teacher gift","Thank you","Just because"];
+  const OCCASIONS=["Christmas","Birthday","Birthday party","Holiday","Thanksgiving","Hanukkah","Easter","Anniversary","Valentine's Day","Mother's Day","Father's Day","Graduation","Wedding","Baby shower","Bridal shower","Housewarming","Retirement","Teacher gift","Thank you","Just because"];
   const STATUS={idea:"Idea",bought:"Bought",ready:"Ready",given:"Given"};
   const NEXT={idea:["bought","Mark bought"],bought:["ready","Mark wrapped"],ready:["given","Mark given"]};
-  const state={space:"shared",shared:[],priv:[],rulesOk:null,gifts:[],people:{},givers:["Tyler","Both"],sel:"",group:"",canWrite:true,db:null,user:null,uid:null,loaded:false,busy:new Set()};
+  const state={space:"shared",shared:[],priv:[],events:[],sharedEvents:[],privEvents:[],eventsBlocked:false,rulesOk:null,gifts:[],people:{},givers:["Tyler","Both"],sel:"",group:"",canWrite:true,db:null,user:null,uid:null,loaded:false,busy:new Set()};
   const $=id=>document.getElementById(id);
   const allGifts=()=>state.shared.concat(state.priv);
   const giftCol=()=>state.space==="private"?"private/"+state.uid+"/gifts":"gifts";
@@ -383,7 +389,8 @@ const firebaseConfig = {
   function datesHere(info){if(!info)return false;if(info.account&&info.account===state.uid)return false;return info.account?state.space==="private":state.space==="shared";}
   function coveredBy(pk,kind,date){const lo=daysUntil(date)-14,hi=daysUntil(date)+3;
     return allGifts().some(g=>{if(key(g.recipient)!==pk)return false;const gd=g.due||g.date;if(gd&&String(gd).length===10){const n=daysUntil(gd);if(n>=lo&&n<=hi)return true;}
-      return g.occasion===kind&&yearOf(g)===+date.slice(0,4);});}
+      return g.occasion===kind&&yearOf(g)===+date.slice(0,4);})
+      ||allEvents().some(e=>e.date&&(e.people||[]).includes(pk)&&daysUntil(e.date)>=lo&&daysUntil(e.date)<=hi);}
   function personEvents(){const out=[];const lim=EVENT_DAYS;
     for(const [pk,info] of Object.entries(state.people)){if(!info||!info.name||!datesHere(info))continue;if(state.group&&!(info.groups||[]).includes(state.group))continue;
       const add=(kind,date,label)=>{if(date&&daysUntil(date)<=lim&&!coveredBy(pk,kind,date))out.push({pk,name:info.name,kind,date,label});};
@@ -391,7 +398,18 @@ const firebaseConfig = {
       if(info.mothersDay)add("Mother's Day",nextHoliday("Mother's Day"),"Mother's Day");
       if(info.fathersDay)add("Father's Day",nextHoliday("Father's Day"),"Father's Day");}
     return out;}
-  function applySpace(){state.gifts=state.space==="private"?state.priv:state.shared;}
+  function applySpace(){state.gifts=state.space==="private"?state.priv:state.shared;state.events=state.space==="private"?state.privEvents:state.sharedEvents;}
+  const evCol=()=>state.space==="private"?"private/"+state.uid+"/events":"events";
+  const allEvents=()=>state.sharedEvents.concat(state.privEvents);
+  function nameOf(k){const p=state.people[k];if(p&&p.name)return p.name;const s=peopleSummary().find(x=>x.key===k);return s?s.name:k;}
+  function giftNear(pk,date){const lo=daysUntil(date)-14,hi=daysUntil(date)+3;
+    return allGifts().some(g=>{if(key(g.recipient)!==pk)return false;const gd=g.due||g.date;if(!gd||String(gd).length!==10)return false;const n=daysUntil(gd);return n>=lo&&n<=hi;});}
+  function eventPeople(ev){const out=[];const seen=new Set();
+    for(const k of ev.people||[]){const info=state.people[k];if(info&&info.account&&info.account===state.uid)continue;if(!seen.has(k)){seen.add(k);out.push(k);}}
+    if(ev.group)for(const m of membersOf(ev.group))if(!seen.has(m.key)&&datesHere(state.people[m.key])){seen.add(m.key);out.push(m.key);}
+    return out;}
+  const evLabel=ev=>ev.title||ev.kind||"Event";
+  function fmtTime(t){if(!/^\d{2}:\d{2}$/.test(t||""))return"";const [h,m]=t.split(":").map(Number);return new Date(2000,0,1,h,m).toLocaleTimeString(undefined,{hour:"numeric",minute:m?"2-digit":undefined});}
   const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const key=n=>String(n||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"unknown";
   const money=n=>n==null||n===""||isNaN(n)?"":"$"+Number(n).toLocaleString(undefined,{minimumFractionDigits:Number(n)%1?2:0,maximumFractionDigits:2});
@@ -453,28 +471,33 @@ const firebaseConfig = {
     const dated=state.gifts.filter(g=>g.due&&inGroup(g.recipient));
     const buckets={};for(const g of dated)(buckets[g.due]??=[]).push(g);
     const evs={};for(const e of personEvents()){(evs[e.date]??=[]).push(e);buckets[e.date]??=[];}
+    const uevs={};for(const e of state.events){if(!e.date||e.date<t)continue;if(state.group&&e.group!==state.group&&!(e.people||[]).some(k=>groupsOf(k).includes(state.group)))continue;(uevs[e.date]??=[]).push(e);buckets[e.date]??=[];}
+    const blocked=state.space==="shared"&&state.eventsBlocked?`<div class="private-note bad">Events can't be saved on Household yet. Paste the updated firestore.rules into Firebase (Firestore Database → Rules → Publish).</div>`:"";
     const keys=Object.keys(buckets).filter(d=>d>=t||buckets[d].some(g=>g.status!=="given")).sort();
     const noDue=state.gifts.filter(g=>!g.due&&(g.status==="bought"||g.status==="ready")&&inGroup(g.recipient));
-    if(!keys.length){el.innerHTML=`<div class="empty card"><h3>Nothing scheduled</h3><div>Give a gift a <b>give-on</b> date and it lands here, grouped by day, with what's still to buy or wrap. Birthdays and Mother's or Father's Day show up here ${EVENT_DAYS} days ahead once they're on someone's card.</div>${noDue.length?`<div class="hint">${noDue.length} bought gift${noDue.length===1?" has":"s have"} no give-on date yet.</div>`:""}</div>`;$("upNote").textContent="Gifts with a give-on date, grouped by the day they go out.";return;}
-    let open=0;
-    el.innerHTML=keys.map(d=>{const gs=buckets[d].slice().sort((a,b)=>a.recipient.localeCompare(b.recipient));const ev=(evs[d]||[]).slice().sort((a,b)=>a.name.localeCompare(b.name));const n=gs.length+ev.length;
+    if(!keys.length){el.innerHTML=blocked+`<div class="empty card"><h3>Nothing scheduled</h3><div>Give a gift a <b>give-on</b> date and it lands here, grouped by day, with what's still to buy or wrap. Birthdays and Mother's or Father's Day show up here ${EVENT_DAYS} days ahead once they're on someone's card. Use <b>+ Event</b> for parties and holidays.</div>${noDue.length?`<div class="hint">${noDue.length} bought gift${noDue.length===1?" has":"s have"} no give-on date yet.</div>`:""}</div>`;$("upNote").textContent="Gifts with a give-on date, grouped by the day they go out.";return;}
+    let open=0,needAll=0;
+    el.innerHTML=keys.map(d=>{const gs=buckets[d].slice().sort((a,b)=>a.recipient.localeCompare(b.recipient));const ev=(evs[d]||[]).slice().sort((a,b)=>a.name.localeCompare(b.name));const uev=(uevs[d]||[]).slice().sort((a,b)=>(a.time||"").localeCompare(b.time||""));
+      const recips0=new Set(gs.map(g=>key(g.recipient)));const seen0=new Set(ev.map(e=>e.pk));const umiss=[];
+      for(const e of uev)for(const k of eventPeople(e))if(!recips0.has(k)&&!seen0.has(k)&&!giftNear(k,d)){seen0.add(k);umiss.push({key:k,name:nameOf(k),occ:e.kind||e.title||""});}
+      const need=ev.length+umiss.length;needAll+=need;const n=gs.length+need;
       const c={idea:0,bought:0,ready:0,given:0};gs.forEach(g=>c[g.status]=(c[g.status]||0)+1);
-      const dleft=daysUntil(d);const allDone=!ev.length&&c.given===n;const late=dleft<0&&!allDone;const onway=gs.filter(g=>g.status==="bought"&&g.ship==="on_way").length;const issues=gs.some(g=>shipIssue(g));const soon=(dleft<=3&&(c.idea+c.bought)>0)||issues||(ev.length>0&&dleft<=14);
+      const dleft=daysUntil(d);const allDone=!need&&gs.length>0&&c.given===gs.length;const late=dleft<0&&!allDone;const onway=gs.filter(g=>g.status==="bought"&&g.ship==="on_way").length;const issues=gs.some(g=>shipIssue(g));const soon=(dleft<=3&&(c.idea+c.bought)>0)||issues||(need>0&&dleft<=14);
       if(!allDone)open+=gs.length-c.given;
       const evNames=new Set(ev.map(e=>e.pk));
-      const occs=[...new Set([...ev.map(e=>e.label),...gs.map(g=>g.occasion).filter(o=>o&&!(o==="Birthday"&&ev.some(e=>e.kind==="Birthday")))])].join(" · ")||"Gifts going out";
+      const occs=[...new Set([...uev.map(evLabel),...ev.map(e=>e.label),...gs.map(g=>g.occasion).filter(o=>o&&!(o==="Birthday"&&ev.some(e=>e.kind==="Birthday")))])].join(" · ")||"Gifts going out";
       const recips=new Set(gs.map(g=>key(g.recipient)));
       const grp=!gs.length?[]:state.group?[state.group]:[...new Set([...recips].flatMap(groupsOf))];
-      const missing=ev.map(e=>({key:e.pk,name:e.name,occ:e.kind}));const seen=new Set(evNames);
+      const missing=ev.map(e=>({key:e.pk,name:e.name,occ:e.kind})).concat(umiss);const seen=new Set([...evNames,...umiss.map(m=>m.key)]);
       for(const gr of grp)for(const m of membersOf(gr))if(!recips.has(m.key)&&!seen.has(m.key)&&datesHere(state.people[m.key])){seen.add(m.key);missing.push({...m,occ:gs[0].occasion||""});}
       const dt=parseD(d);
-      const summary=allDone?"All given":[ev.length&&`${ev.length} need${ev.length===1?"s":""} a gift`,c.idea&&`${c.idea} to buy`,onway&&`${onway} on the way`,(c.bought-onway)&&`${c.bought-onway} to wrap`,c.ready&&`${c.ready} ready`].filter(Boolean).join(" · ");
+      const summary=allDone?"All given":[need&&`${need} need${need===1?"s":""} a gift`,c.idea&&`${c.idea} to buy`,onway&&`${onway} on the way`,(c.bought-onway)&&`${c.bought-onway} to wrap`,c.ready&&`${c.ready} ready`].filter(Boolean).join(" · ");
       const pct=x=>(x/n*100).toFixed(1)+"%";
       return `<article class="run${allDone?" done":""}${late?" late":""}">
         <div class="run-head">
           <div class="cal" aria-hidden="true"><b>${esc(dt.toLocaleDateString(undefined,{month:"short"}))}</b><i>${dt.getDate()}</i></div>
-          <div class="run-title"><h3>${esc(occs)}</h3><div class="when${soon||late?" soon":""}">${esc(dt.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"}))} · ${relDays(dleft)}${soon&&!late?" · needs attention":""}</div></div>
-          <div class="meter"><span class="num">${c.ready+c.given} of ${n} ready</span><span class="bar" role="img" aria-label="${esc(summary)}"><i class="g" style="width:${pct(c.given)}"></i><i class="r" style="width:${pct(c.ready)}"></i><i class="b" style="width:${pct(c.bought)}"></i></span><span class="num">${esc(summary)}</span></div>
+          <div class="run-title"><h3>${esc(occs)}</h3><div class="when${soon||late?" soon":""}">${esc(dt.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"}))} · ${relDays(dleft)}${soon&&!late?" · needs attention":""}</div>${uev.map(e=>`<div class="ev-line">${uev.length>1?`<b>${esc(evLabel(e))}</b>`:""}${[fmtTime(e.time),e.where].filter(Boolean).map(x=>`<span>${esc(x)}</span>`).join("")}${e.notes?`<span>${esc(e.notes)}</span>`:""}${state.canWrite?`<button class="btn ghost" data-evedit="${esc(e.id)}">Edit event</button>`:""}</div>`).join("")}</div>
+          ${n?`<div class="meter"><span class="num">${c.ready+c.given} of ${n} ready</span><span class="bar" role="img" aria-label="${esc(summary)}"><i class="g" style="width:${pct(c.given)}"></i><i class="r" style="width:${pct(c.ready)}"></i><i class="b" style="width:${pct(c.bought)}"></i></span><span class="num">${esc(summary)}</span></div>`:""}
         </div>
         ${allDone&&!missing.length?"":gs.map(g=>{const nx=nextStep(g);const link=safeLink(g.link);return `<div class="run-row">
           <div class="who">${esc(g.recipient)}</div>
@@ -482,10 +505,11 @@ const firebaseConfig = {
           <div class="st"><span class="pill ${esc(g.status)}">${STATUS[g.status]||esc(g.status)}</span></div>
           <div class="next">${state.canWrite&&nx?`<button class="btn sm" data-adv="${esc(g.id)}" data-to="${nx[0]}" ${state.busy.has(g.id)?"disabled":""}>${nx[1]}</button>`:(state.canWrite?`<button class="btn ghost sm" data-edit="${esc(g.id)}">Edit</button>`:"")}</div>
         </div>`;}).join("")}
+        ${!n&&state.canWrite?`<div class="run-missing"><span class="muted">No gifts on the list for this yet.</span><button class="addfor" data-addfor="" data-due="${esc(d)}" data-occ="${esc(uev[0]?(uev[0].kind||uev[0].title||""):"")}">+ Add a gift</button></div>`:""}
         ${missing.length?`<div class="run-missing"><span class="lab">No gift yet for</span>${missing.map(m=>state.canWrite?`<button class="addfor" data-addfor="${esc(m.name)}" data-due="${esc(d)}" data-occ="${esc(m.occ||"")}">+ ${esc(m.name)}</button>`:`<span>${esc(m.name)}</span>`).join("")}</div>`:""}
       </article>`;}).join("")+(noDue.length?`<div class="hint">${noDue.length} bought gift${noDue.length===1?" has":"s have"} no give-on date, so ${noDue.length===1?"it isn't":"they aren't"} shown here. Filter the ledger by Bought or Ready to find ${noDue.length===1?"it":"them"}.</div>`:"");
-    const need=Object.values(evs).reduce((a,x)=>a+x.length,0);
-    $("upNote").textContent=[open&&`${open} gift${open===1?"":"s"} still to hand out`,need&&`${need} ${need===1?"date needs":"dates need"} a gift`].filter(Boolean).join(" · ")||"Everything scheduled has been given.";}
+    el.innerHTML=blocked+el.innerHTML;
+    $("upNote").textContent=[open&&`${open} gift${open===1?"":"s"} still to hand out`,needAll&&`${needAll} ${needAll===1?"person needs":"people need"} a gift`].filter(Boolean).join(" · ")||"Everything scheduled has been given.";}
 
   /* ---------- render: rest ---------- */
   function renderDatalists(){const ppl=peopleSummary();$("peopleList").innerHTML=ppl.map(p=>`<option value="${esc(p.name)}">`).join("");
@@ -535,7 +559,7 @@ const firebaseConfig = {
     if(m.length){v.className="verdict hit";v.innerHTML=`<strong>Heads up: ${esc(theirs[0]?.recipient||who)} may already have something like this.</strong><ul>${m.slice(0,5).map(x=>`<li>${esc(x.g.item)} <span>${x.g._priv?"· on your private list ":""}· ${STATUS[x.g.status]||""} · ${esc(x.g.occasion||"")} ${esc(fmtDate(x.g))}${x.g.from?" · from "+esc(x.g.from):""}</span></li>`).join("")}</ul>`;}
     else if(!theirs.length){v.className="verdict clear";v.innerHTML=`<strong>Clear.</strong> Nothing logged for ${esc(who)} yet, so there's nothing to repeat.`;}
     else{v.className="verdict clear";v.innerHTML=`<strong>Clear to buy.</strong> Nothing similar among the ${theirs.length} thing${theirs.length===1?"":"s"} logged for ${esc(theirs[0].recipient)}.`;}}
-  function renderAll(){renderGroups();renderDatalists();renderFilters();renderRuns();renderPeople();renderLedger();renderCheck();const show=state.canWrite&&state.loaded&&!!state.db;$("addBtn").hidden=!show;$("addPersonBtn").hidden=!show;}
+  function renderAll(){renderGroups();renderDatalists();renderFilters();renderRuns();renderPeople();renderLedger();renderCheck();const show=state.canWrite&&state.loaded&&!!state.db;$("addBtn").hidden=!show;$("addPersonBtn").hidden=!show;$("addEventBtn").hidden=!show;}
 
   /* ---------- quick advance ---------- */
   async function advance(id,to){const g=state.gifts.find(x=>x.id===id);if(!g||state.busy.has(id))return;state.busy.add(id);renderRuns();
@@ -686,6 +710,50 @@ const firebaseConfig = {
         await state.db.doc("people/"+pk).set(body);close();toast(isNew?"Added "+name:"Saved");}catch(err){const er=$("pErr");er.hidden=false;er.textContent=errText(err);}});
     setTimeout(()=>{const f=isNew?$("pName"):null;f&&f.focus();},30);}
 
+  /* ---------- event sheet ---------- */
+  function openEvent(ev){if(!state.canWrite||!state.db)return;const isNew=!ev;ev=ev||{date:"",people:[],group:state.group||""};
+    let picked=(ev.people||[]).slice();const groups=allGroups();
+    const sh=$("sheetHost");sh.innerHTML=`<div class="scrim" id="scrim"><form class="sheet" id="eForm" role="dialog" aria-modal="true" aria-labelledby="eTitle" novalidate>
+      <h2 id="eTitle">${isNew?"Add an event":"Edit event"}</h2>
+      ${state.space==="private"?`<div class="hint">This event goes on your private list. Only you will see it.</div>`:""}
+      <label for="evName">Name<input id="evName" value="${esc(ev.title||"")}" placeholder="e.g. Sarah's 5th birthday party" autocomplete="off"></label>
+      <div class="grid3">
+        <label for="evKind">Type<input id="evKind" list="occList" value="${esc(ev.kind||"")}" placeholder="Birthday party, Holiday…" autocomplete="off"></label>
+        <label for="evDate">Date<input id="evDate" type="date" required value="${esc(ev.date||"")}"></label>
+        <label for="evTime">Time (optional)<input id="evTime" type="time" value="${esc(ev.time||"")}"></label>
+      </div>
+      <label for="evWhere">Where (optional)<input id="evWhere" value="${esc(ev.where||"")}" placeholder="Grandma's house" autocomplete="off"></label>
+      <div><div class="eyebrow" style="margin-bottom:6px">Gifts needed for</div><div class="pchips" id="evPeople"></div>
+        <div class="hint" style="margin-top:6px">Pick the people who should get a gift. They'll show up as "No gift yet" until one is logged. Leave it empty for an event you just want on the calendar.</div></div>
+      ${groups.length?`<label for="evGroup">Or everyone in a group<select id="evGroup"><option value="">—</option>${groups.map(g=>`<option value="${esc(g.name)}" ${ev.group===g.name?"selected":""}>${esc(g.name)} (${g.count})</option>`).join("")}</select></label>`:""}
+      <label for="evNotes">Notes<textarea id="evNotes" placeholder="Dress code, RSVP by, gift card OK…">${esc(ev.notes||"")}</textarea></label>
+      <div class="err" id="evErr" hidden></div>
+      <div class="sheet-actions">
+        ${isNew?"":`<button type="button" class="btn danger" id="evDel">Delete</button>`}
+        <div class="right"><button type="button" class="btn" id="evCancel">Cancel</button><button type="submit" class="btn primary" id="evSave">${isNew?"Add event":"Save changes"}</button></div>
+      </div>
+    </form></div>`;
+    function drawPeople(){const ppl=peopleSummary();
+      $("evPeople").innerHTML=ppl.length?ppl.map(p=>`<button type="button" class="chip" data-pk="${esc(p.key)}" aria-pressed="${picked.includes(p.key)}">${esc(p.name)}</button>`).join(""):`<span class="hint">Add people with + Person first, or log a gift for them.</span>`;}
+    drawPeople();
+    $("evPeople").addEventListener("click",e=>{const b=e.target.closest("[data-pk]");if(!b)return;const k=b.dataset.pk;picked=picked.includes(k)?picked.filter(x=>x!==k):[...picked,k];drawPeople();});
+    const close=()=>{sh.innerHTML="";document.removeEventListener("keydown",onEsc);};function onEsc(e){if(e.key==="Escape")close();}
+    document.addEventListener("keydown",onEsc);
+    $("evCancel").onclick=close;$("scrim").addEventListener("mousedown",e=>{if(e.target.id==="scrim")close();});
+    const showErr=m=>{const e=$("evErr");e.hidden=false;e.textContent=m;};
+    const col=ev._col||evCol();
+    if(!isNew){let armed=false;$("evDel").onclick=async()=>{if(!armed){armed=true;$("evDel").textContent="Tap again to delete";return;}try{await state.db.doc(col+"/"+ev.id).delete();close();toast("Event deleted");}catch(err){showErr(errText(err));}};}
+    $("eForm").addEventListener("submit",async e=>{e.preventDefault();
+      const title=$("evName").value.trim(),kind=$("evKind").value.trim(),date=$("evDate").value;
+      if(!date){showErr("Pick a date for the event.");return;}
+      if(!title&&!kind){showErr("Give the event a name or a type.");return;}
+      const body={title,kind,date,time:$("evTime").value,where:$("evWhere").value.trim(),people:picked,group:$("evGroup")?$("evGroup").value:"",notes:$("evNotes").value.trim(),
+        createdAt:ev.createdAt||new Date().toISOString(),createdBy:ev.createdBy||state.uid,updatedAt:new Date().toISOString(),updatedBy:state.uid};
+      $("evSave").disabled=true;
+      try{if(isNew)await state.db.collection(col).add(body);else await state.db.doc(col+"/"+ev.id).set(body);close();toast(isNew?"Event added":"Saved");}
+      catch(err){$("evSave").disabled=false;showErr(err&&err.code==="permission-denied"&&col==="events"?"Household events need the updated database rules. Paste firestore.rules into Firebase, then try again.":errText(err));}});
+    setTimeout(()=>{$("evName").focus();},30);}
+
   /* ---------- private tab ---------- */
   function renderSpace(){const priv=state.space==="private";$("tabShared").setAttribute("aria-selected",!priv);$("tabPrivate").setAttribute("aria-selected",priv);
     const note=$("privateNote");note.hidden=!priv;note.classList.toggle("bad",state.rulesOk===false);
@@ -699,6 +767,7 @@ const firebaseConfig = {
   /* ---------- events ---------- */
   $("addBtn").onclick=()=>openGift(null);
   $("addPersonBtn").onclick=()=>openPerson(null);
+  $("addEventBtn").onclick=()=>openEvent(null);
   ["fSearch","fStatus","fYear","fOcc"].forEach(id=>$(id).addEventListener("input",renderLedger));
   ["chkWho","chkWhat"].forEach(id=>$(id).addEventListener("input",renderCheck));
   $("groupbar").addEventListener("click",e=>{const b=e.target.closest("[data-group]");if(!b)return;state.group=b.dataset.group;state.sel="";renderGroups();renderRuns();renderPeople();renderLedger();});
@@ -708,6 +777,7 @@ const firebaseConfig = {
     const ed=e.target.closest("[data-edit]");if(ed)openGift(state.gifts.find(g=>g.id===ed.dataset.edit));});
   $("runs").addEventListener("click",e=>{const a=e.target.closest("[data-adv]");if(a){advance(a.dataset.adv,a.dataset.to);return;}
     const ed=e.target.closest("[data-edit]");if(ed){openGift(state.gifts.find(g=>g.id===ed.dataset.edit));return;}
+    const ee=e.target.closest("[data-evedit]");if(ee){openEvent(state.events.find(x=>x.id===ee.dataset.evedit));return;}
     const af=e.target.closest("[data-addfor]");if(af)openGift(null,{recipient:af.dataset.addfor,due:af.dataset.due,occasion:af.dataset.occ});});
   $("ledger").addEventListener("click",e=>{const ed=e.target.closest("[data-edit]");if(ed){openGift(state.gifts.find(g=>g.id===ed.dataset.edit));return;}
     const a=e.target.closest("[data-act]");if(!a)return;if(a.dataset.act==="add")openGift(null);if(a.dataset.act==="clear"){state.sel="";state.group="";["fSearch","fStatus","fYear","fOcc"].forEach(id=>$(id).value="");renderAll();}});
@@ -741,7 +811,7 @@ const firebaseConfig = {
   $("signOutBtn").addEventListener("click",()=>signOut(auth));
 
   onAuthStateChanged(auth,u=>{
-    stopAll();state.gifts=[];state.shared=[];state.priv=[];state.rulesOk=null;state.people={};state.members={};state.loaded=false;state.denied=false;$("sheetHost").innerHTML="";
+    stopAll();state.gifts=[];state.shared=[];state.priv=[];state.events=[];state.sharedEvents=[];state.privEvents=[];state.eventsBlocked=false;state.rulesOk=null;state.people={};state.members={};state.loaded=false;state.denied=false;$("sheetHost").innerHTML="";
     if(!u){$("meBadge").hidden=true;state.db=null;showGate("Sign in with Google to see and add gifts.","Sign in with Google","");return;}
     $("gate").hidden=true;$("app").hidden=false;
     state.db=api;state.uid=u.uid;state.canWrite=true;
@@ -757,6 +827,10 @@ const firebaseConfig = {
       else{state.loaded=true;$("syncNote").textContent="Offline · showing saved copy";}
       renderAll();},onErr));
     const pc="private/"+u.uid+"/gifts";
+    const pe="private/"+u.uid+"/events";
+    unsubs.push(api.collection("events").onSnapshot(snap=>{state.sharedEvents=snap.docs.map(d=>({id:d.id,...d.data(),_col:"events"}));state.eventsBlocked=false;applySpace();renderAll();},
+      err=>{if(err&&err.code==="permission-denied"){state.eventsBlocked=true;renderRuns();}}));
+    unsubs.push(api.collection(pe).onSnapshot(snap=>{state.privEvents=snap.docs.map(d=>({id:d.id,...d.data(),_col:pe}));applySpace();renderAll();},()=>{}));
     unsubs.push(api.collection(pc).onSnapshot(snap=>{state.priv=snap.docs.map(d=>({id:d.id,...d.data(),_col:pc,_priv:true}));applySpace();renderAll();},()=>{}));
     /* Safety check: under the right rules, nobody can read another account's private list. */
     getDocsFromServer(collection(fdb,"private/rules-check/gifts")).then(()=>{state.rulesOk=false;renderSpace();},e=>{if(e&&e.code==="permission-denied"){state.rulesOk=true;renderSpace();}});
