@@ -6,28 +6,28 @@
   "scope": "./",
   "display": "standalone",
   "background_color": "#f2f4f7",
-  "theme_color": "#18543a",
+  "theme_color": "#111a30",
   "icons": [
     {
-      "src": "icon-192.png?v=gnome",
+      "src": "icon-192.png?v=globe",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-512.png?v=gnome",
+      "src": "icon-512.png?v=globe",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-maskable-192.png?v=gnome",
+      "src": "icon-maskable-192.png?v=globe",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "icon-maskable-512.png?v=gnome",
+      "src": "icon-maskable-512.png?v=globe",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
