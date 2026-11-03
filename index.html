@@ -126,6 +126,10 @@ header.top .sub{margin-top:6px;color:var(--muted)}
 .ow-when.warn{color:var(--warn);font-weight:600}
 .ow-acts{display:flex;gap:6px;justify-self:end;flex-wrap:wrap}
 a.btn{text-decoration:none;color:var(--fg);display:inline-block}
+.optrow{display:flex;flex-wrap:wrap;gap:8px 18px}
+label.opt{display:flex;flex-direction:row;align-items:center;gap:8px;color:var(--fg);font-size:.9rem;font-weight:500;cursor:pointer}
+label.opt input{width:18px;height:18px;margin:0;accent-color:var(--accent)}
+.gtag.date{background:var(--accent-soft);color:var(--accent)}
 .run-missing{padding:10px 16px;border-top:1px dashed var(--line);background:var(--sunk);display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:.88rem}
 .run-missing .lab{color:var(--warn);font-weight:600}
 .addfor{border:1px dashed var(--muted);background:transparent;border-radius:999px;padding:2px 10px;cursor:pointer;font-size:.82rem}
@@ -366,6 +370,27 @@ const firebaseConfig = {
     const iss=shipIssue(g);
     return `<small class="ship${iss?" warn":""}">${esc(label)}${n?`${label?" · ":""}${esc(CARRIERS[c]||"")} ···${esc(n.slice(-4))} <a href="${esc(trackUrl(g))}" target="_blank" rel="noopener">Track</a>`:""}${iss?` · <b>${esc(iss)}</b>`:""}</small>`;}
   const nextStep=g=>(g.status==="bought"&&g.ship==="on_way")?["arrived","Mark arrived"]:NEXT[g.status];
+  /* ---------- birthdays & holidays ---------- */
+  const EVENT_DAYS=60;
+  const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const isLeap=y=>(y%4===0&&y%100!==0)||y%400===0;
+  function nthSunday(y,m,n){const d=new Date(y,m,1);const first=(7-d.getDay())%7+1;return localISO(new Date(y,m,first+7*(n-1)));}
+  const holidayOn={"Mother's Day":y=>nthSunday(y,4,2),"Father's Day":y=>nthSunday(y,5,3)};
+  function nextBirthday(mmdd){if(!/^\d{2}-\d{2}$/.test(mmdd||""))return"";const t=today();let y=+t.slice(0,4);
+    const on=yy=>{let md=mmdd;if(md==="02-29"&&!isLeap(yy))md="02-28";return yy+"-"+md;};let d=on(y);if(d<t)d=on(y+1);return d;}
+  function nextHoliday(name){const t=today();const y=+t.slice(0,4);let d=holidayOn[name](y);if(d<t)d=holidayOn[name](y+1);return d;}
+  /* Where a person's dates show: never for yourself; on your private list for someone linked to another sign-in (your spouse); otherwise on Household. */
+  function datesHere(info){if(!info)return false;if(info.account&&info.account===state.uid)return false;return info.account?state.space==="private":state.space==="shared";}
+  function coveredBy(pk,kind,date){const lo=daysUntil(date)-14,hi=daysUntil(date)+3;
+    return allGifts().some(g=>{if(key(g.recipient)!==pk)return false;const gd=g.due||g.date;if(gd&&String(gd).length===10){const n=daysUntil(gd);if(n>=lo&&n<=hi)return true;}
+      return g.occasion===kind&&yearOf(g)===+date.slice(0,4);});}
+  function personEvents(){const out=[];const lim=EVENT_DAYS;
+    for(const [pk,info] of Object.entries(state.people)){if(!info||!info.name||!datesHere(info))continue;if(state.group&&!(info.groups||[]).includes(state.group))continue;
+      const add=(kind,date,label)=>{if(date&&daysUntil(date)<=lim&&!coveredBy(pk,kind,date))out.push({pk,name:info.name,kind,date,label});};
+      if(info.birthday){const d=nextBirthday(info.birthday);const turns=info.birthYear?(+d.slice(0,4)-info.birthYear):null;add("Birthday",d,`${info.name}'s birthday${turns&&turns>0&&turns<130?" (turns "+turns+")":""}`);}
+      if(info.mothersDay)add("Mother's Day",nextHoliday("Mother's Day"),"Mother's Day");
+      if(info.fathersDay)add("Father's Day",nextHoliday("Father's Day"),"Father's Day");}
+    return out;}
   function applySpace(){state.gifts=state.space==="private"?state.priv:state.shared;}
   const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const key=n=>String(n||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"unknown";
@@ -427,20 +452,23 @@ const firebaseConfig = {
     const t=today();
     const dated=state.gifts.filter(g=>g.due&&inGroup(g.recipient));
     const buckets={};for(const g of dated)(buckets[g.due]??=[]).push(g);
+    const evs={};for(const e of personEvents()){(evs[e.date]??=[]).push(e);buckets[e.date]??=[];}
     const keys=Object.keys(buckets).filter(d=>d>=t||buckets[d].some(g=>g.status!=="given")).sort();
     const noDue=state.gifts.filter(g=>!g.due&&(g.status==="bought"||g.status==="ready")&&inGroup(g.recipient));
-    if(!keys.length){el.innerHTML=`<div class="empty card"><h3>Nothing scheduled</h3><div>Give a gift a <b>give-on</b> date and it lands here, grouped by day, with what's still to buy or wrap.</div>${noDue.length?`<div class="hint">${noDue.length} bought gift${noDue.length===1?" has":"s have"} no give-on date yet.</div>`:""}</div>`;$("upNote").textContent="Gifts with a give-on date, grouped by the day they go out.";return;}
+    if(!keys.length){el.innerHTML=`<div class="empty card"><h3>Nothing scheduled</h3><div>Give a gift a <b>give-on</b> date and it lands here, grouped by day, with what's still to buy or wrap. Birthdays and Mother's or Father's Day show up here ${EVENT_DAYS} days ahead once they're on someone's card.</div>${noDue.length?`<div class="hint">${noDue.length} bought gift${noDue.length===1?" has":"s have"} no give-on date yet.</div>`:""}</div>`;$("upNote").textContent="Gifts with a give-on date, grouped by the day they go out.";return;}
     let open=0;
-    el.innerHTML=keys.map(d=>{const gs=buckets[d].slice().sort((a,b)=>a.recipient.localeCompare(b.recipient));const n=gs.length;
+    el.innerHTML=keys.map(d=>{const gs=buckets[d].slice().sort((a,b)=>a.recipient.localeCompare(b.recipient));const ev=(evs[d]||[]).slice().sort((a,b)=>a.name.localeCompare(b.name));const n=gs.length+ev.length;
       const c={idea:0,bought:0,ready:0,given:0};gs.forEach(g=>c[g.status]=(c[g.status]||0)+1);
-      const dleft=daysUntil(d);const allDone=c.given===n;const late=dleft<0&&!allDone;const onway=gs.filter(g=>g.status==="bought"&&g.ship==="on_way").length;const issues=gs.some(g=>shipIssue(g));const soon=(dleft<=3&&(c.idea+c.bought)>0)||issues;
-      if(!allDone)open+=n-c.given;
-      const occs=[...new Set(gs.map(g=>g.occasion).filter(Boolean))].join(" · ")||"Gifts going out";
+      const dleft=daysUntil(d);const allDone=!ev.length&&c.given===n;const late=dleft<0&&!allDone;const onway=gs.filter(g=>g.status==="bought"&&g.ship==="on_way").length;const issues=gs.some(g=>shipIssue(g));const soon=(dleft<=3&&(c.idea+c.bought)>0)||issues||(ev.length>0&&dleft<=14);
+      if(!allDone)open+=gs.length-c.given;
+      const evNames=new Set(ev.map(e=>e.pk));
+      const occs=[...new Set([...ev.map(e=>e.label),...gs.map(g=>g.occasion).filter(o=>o&&!(o==="Birthday"&&ev.some(e=>e.kind==="Birthday")))])].join(" · ")||"Gifts going out";
       const recips=new Set(gs.map(g=>key(g.recipient)));
-      const grp=state.group?[state.group]:[...new Set([...recips].flatMap(groupsOf))];
-      const missing=[];const seen=new Set();for(const gr of grp)for(const m of membersOf(gr))if(!recips.has(m.key)&&!seen.has(m.key)){seen.add(m.key);missing.push(m);}
+      const grp=!gs.length?[]:state.group?[state.group]:[...new Set([...recips].flatMap(groupsOf))];
+      const missing=ev.map(e=>({key:e.pk,name:e.name,occ:e.kind}));const seen=new Set(evNames);
+      for(const gr of grp)for(const m of membersOf(gr))if(!recips.has(m.key)&&!seen.has(m.key)&&datesHere(state.people[m.key])){seen.add(m.key);missing.push({...m,occ:gs[0].occasion||""});}
       const dt=parseD(d);
-      const summary=allDone?"All given":[c.idea&&`${c.idea} to buy`,onway&&`${onway} on the way`,(c.bought-onway)&&`${c.bought-onway} to wrap`,c.ready&&`${c.ready} ready`].filter(Boolean).join(" · ");
+      const summary=allDone?"All given":[ev.length&&`${ev.length} need${ev.length===1?"s":""} a gift`,c.idea&&`${c.idea} to buy`,onway&&`${onway} on the way`,(c.bought-onway)&&`${c.bought-onway} to wrap`,c.ready&&`${c.ready} ready`].filter(Boolean).join(" · ");
       const pct=x=>(x/n*100).toFixed(1)+"%";
       return `<article class="run${allDone?" done":""}${late?" late":""}">
         <div class="run-head">
@@ -454,9 +482,10 @@ const firebaseConfig = {
           <div class="st"><span class="pill ${esc(g.status)}">${STATUS[g.status]||esc(g.status)}</span></div>
           <div class="next">${state.canWrite&&nx?`<button class="btn sm" data-adv="${esc(g.id)}" data-to="${nx[0]}" ${state.busy.has(g.id)?"disabled":""}>${nx[1]}</button>`:(state.canWrite?`<button class="btn ghost sm" data-edit="${esc(g.id)}">Edit</button>`:"")}</div>
         </div>`;}).join("")}
-        ${missing.length?`<div class="run-missing"><span class="lab">No gift yet for</span>${missing.map(m=>state.canWrite?`<button class="addfor" data-addfor="${esc(m.name)}" data-due="${esc(d)}" data-occ="${esc(gs[0].occasion||"")}">+ ${esc(m.name)}</button>`:`<span>${esc(m.name)}</span>`).join("")}</div>`:""}
+        ${missing.length?`<div class="run-missing"><span class="lab">No gift yet for</span>${missing.map(m=>state.canWrite?`<button class="addfor" data-addfor="${esc(m.name)}" data-due="${esc(d)}" data-occ="${esc(m.occ||"")}">+ ${esc(m.name)}</button>`:`<span>${esc(m.name)}</span>`).join("")}</div>`:""}
       </article>`;}).join("")+(noDue.length?`<div class="hint">${noDue.length} bought gift${noDue.length===1?" has":"s have"} no give-on date, so ${noDue.length===1?"it isn't":"they aren't"} shown here. Filter the ledger by Bought or Ready to find ${noDue.length===1?"it":"them"}.</div>`:"");
-    $("upNote").textContent=open?`${open} gift${open===1?"":"s"} still to hand out.`:"Everything scheduled has been given.";}
+    const need=Object.values(evs).reduce((a,x)=>a+x.length,0);
+    $("upNote").textContent=[open&&`${open} gift${open===1?"":"s"} still to hand out`,need&&`${need} ${need===1?"date needs":"dates need"} a gift`].filter(Boolean).join(" · ")||"Everything scheduled has been given.";}
 
   /* ---------- render: rest ---------- */
   function renderDatalists(){const ppl=peopleSummary();$("peopleList").innerHTML=ppl.map(p=>`<option value="${esc(p.name)}">`).join("");
@@ -465,12 +494,18 @@ const firebaseConfig = {
     $("groupList").innerHTML=allGroups().map(g=>`<option value="${esc(g.name)}">`).join("");}
   function renderFilters(){const ys=[...new Set(state.gifts.map(yearOf).filter(Boolean))].sort((a,b)=>b-a);const fy=$("fYear"),cur=fy.value;fy.innerHTML=`<option value="">All years</option>`+ys.map(y=>`<option value="${y}">${y}</option>`).join("");fy.value=ys.includes(+cur)?cur:"";
     const os=[...new Set(state.gifts.map(g=>g.occasion).filter(Boolean))].sort();const fo=$("fOcc"),c2=fo.value;fo.innerHTML=`<option value="">All occasions</option>`+os.map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join("");fo.value=os.includes(c2)?c2:"";}
+  function dateTags(info){const t=[];
+    if(info.account&&info.account===state.uid)t.push(`<span class="gtag">You</span>`);
+    if(info.birthday){const d=nextBirthday(info.birthday);const n=daysUntil(d);t.push(`<span class="gtag date">Birthday ${esc(fmtD(d,{month:"short",day:"numeric"}))}${n<=EVENT_DAYS?" · "+(n===0?"today":"in "+n+"d"):""}</span>`);}
+    if(info.mothersDay)t.push(`<span class="gtag date">Mother's Day</span>`);if(info.fathersDay)t.push(`<span class="gtag date">Father's Day</span>`);
+    return t.length?`<span class="groups">${t.join("")}</span>`:"";}
   function renderPeople(){const ppl=peopleSummary().filter(p=>!state.group||groupsOf(p.key).includes(state.group));const el=$("people");
     if(!ppl.length){el.innerHTML=`<div class="muted">${state.group?"Nobody in this group yet.":"People show up here when you log a gift for them or add them with + Person."}</div>`;return;}
     el.innerHTML=ppl.map(p=>{const info=state.people[p.key]||{};const budget=Number(info.budget)||0;const pct=budget?Math.min(100,p.spent/budget*100):0;const given=p.gifts.filter(g=>g.status==="given").length,ideas=p.gifts.filter(g=>g.status==="idea").length;const gr=groupsOf(p.key);
       return `<button class="tag${state.sel===p.key?" on":""}" data-person="${esc(p.key)}" aria-pressed="${state.sel===p.key}">
         <span class="name">${esc(p.name)}</span>
         ${gr.length?`<span class="groups">${gr.map(x=>`<span class="gtag">${esc(x)}</span>`).join("")}</span>`:""}
+        ${dateTags(info)}
         <span class="meta">${given} given${ideas?` · ${ideas} idea${ideas===1?"":"s"}`:""}</span>
         ${p.next?`<span class="meta next">Next: ${esc(p.next.item)} · ${esc(fmtD(p.next.due,{month:"short",day:"numeric"}))}</span>`:`<span class="meta">${p.last?"Last: "+esc(p.last.item):"Nothing given yet"}</span>`}
         ${budget?`<span class="meta num">${money(p.spent)} of ${money(budget)} in ${thisYear}</span><span class="bar"><i class="${p.spent>budget?"over":"g"}" style="width:${pct}%"></i></span>`:(p.spent?`<span class="meta num">${money(p.spent)} spent in ${thisYear}</span>`:"")}
@@ -603,10 +638,25 @@ const firebaseConfig = {
   /* ---------- person sheet ---------- */
   function openPerson(k){const isNew=!k;const p=isNew?{key:"",name:"",gifts:[]}:peopleSummary().find(x=>x.key===k);if(!p)return;const info=isNew?{}:(state.people[k]||{});
     let groups=isNew?(state.group?[state.group]:[]):groupsOf(k).slice();
+    const [bm,bd]=(info.birthday||"-").split("-");
     const hist=p.gifts.slice().sort((a,b)=>sortKey(b).localeCompare(sortKey(a)));const ro=!state.canWrite||!state.db;
     const sh=$("sheetHost");sh.innerHTML=`<div class="scrim" id="scrim"><form class="sheet" id="pForm" role="dialog" aria-modal="true" aria-labelledby="pTitle" novalidate>
       ${isNew?`<h2 id="pTitle">Add a person</h2><label for="pName">Name<input id="pName" autocomplete="off" required></label>`:`<h2 id="pTitle">${esc(p.name)}</h2><div class="person-hist">${hist.length?hist.map(g=>`<div>${esc(g.item)} <span>· ${STATUS[g.status]||""} · ${esc(g.occasion||"")} ${esc(fmtDate(g))}${g.price!=null?" · "+money(g.price):""}</span></div>`).join(""):'<span>No gifts yet.</span>'}</div>`}
       <div><div class="eyebrow" style="margin-bottom:6px">Groups</div><div class="gpick" id="gpick"></div></div>
+      <div>
+        <div class="eyebrow" style="margin-bottom:6px">Birthday</div>
+        <div class="grid3">
+          <label for="pBMonth">Month<select id="pBMonth" ${ro?"disabled":""}><option value="">—</option>${MONTHS.map((m,i)=>`<option value="${String(i+1).padStart(2,"0")}" ${bm===String(i+1).padStart(2,"0")?"selected":""}>${m}</option>`).join("")}</select></label>
+          <label for="pBDay">Day<select id="pBDay" ${ro?"disabled":""}><option value="">—</option>${Array.from({length:31},(_,i)=>String(i+1).padStart(2,"0")).map(x=>`<option value="${x}" ${bd===x?"selected":""}>${+x}</option>`).join("")}</select></label>
+          <label for="pBYear">Year (optional)<input id="pBYear" type="number" min="1900" max="${thisYear}" inputmode="numeric" placeholder="For their age" value="${info.birthYear??""}" ${ro?"disabled":""}></label>
+        </div>
+      </div>
+      <div class="optrow">
+        <label class="opt" for="pMom"><input type="checkbox" id="pMom" ${info.mothersDay?"checked":""} ${ro?"disabled":""}>Celebrate on Mother's Day</label>
+        <label class="opt" for="pDad"><input type="checkbox" id="pDad" ${info.fathersDay?"checked":""} ${ro?"disabled":""}>Celebrate on Father's Day</label>
+        ${info.account&&info.account!==state.uid?`<span class="hint">Linked to another sign-in, so their dates show on that person's spouse's private list.</span>`:`<label class="opt" for="pMe"><input type="checkbox" id="pMe" ${info.account===state.uid&&state.uid?"checked":""} ${ro?"disabled":""}>This is me</label>`}
+      </div>
+      <div class="hint" id="pMeHint">Tick "This is me" on your own card. Your own dates won't remind you, and your dates show on the other person's private list instead of Household.</div>
       <div class="grid2">
         <label for="pBudget">Yearly budget ($)<input id="pBudget" type="number" min="0" step="1" inputmode="decimal" value="${info.budget??""}" ${ro?"disabled":""}></label>
         <div></div>
@@ -627,8 +677,13 @@ const firebaseConfig = {
     $("pForm").addEventListener("submit",async e=>{e.preventDefault();const ng=$("newGroup");if(ng&&ng.value.trim()&&!groups.includes(ng.value.trim()))groups.push(ng.value.trim());
       const name=isNew?$("pName").value.trim():p.name;if(!name){const er=$("pErr");er.hidden=false;er.textContent="Add a name.";return;}
       const pk=isNew?key(name):k;if(isNew&&state.people[pk]&&state.people[pk].name){const er=$("pErr");er.hidden=false;er.textContent=`${state.people[pk].name} is already on the list.`;return;}
-      const b=$("pBudget").value;const body={name,groups,budget:b===""?null:Number(b),notes:$("pNotes").value.trim(),updatedBy:state.uid,updatedAt:new Date().toISOString()};
-      try{await state.db.doc("people/"+pk).set(body);close();toast(isNew?"Added "+name:"Saved");}catch(err){const er=$("pErr");er.hidden=false;er.textContent=errText(err);}});
+      const bmv=$("pBMonth").value,bdv=$("pBDay").value,byv=$("pBYear").value;
+      if((bmv&&!bdv)||(!bmv&&bdv)){const er=$("pErr");er.hidden=false;er.textContent="Pick both a month and a day for the birthday, or leave both blank.";return;}
+      if(bmv&&bdv&&+bdv>[31,29,31,30,31,30,31,31,30,31,30,31][+bmv-1]){const er=$("pErr");er.hidden=false;er.textContent=`${MONTHS[+bmv-1]} doesn't have ${+bdv} days.`;return;}
+      const me=$("pMe")?$("pMe").checked:false;const account=$("pMe")?(me?state.uid:null):(info.account||null);
+      const b=$("pBudget").value;const body={name,groups,budget:b===""?null:Number(b),notes:$("pNotes").value.trim(),birthday:bmv&&bdv?bmv+"-"+bdv:"",birthYear:byv?Number(byv):null,mothersDay:$("pMom").checked,fathersDay:$("pDad").checked,account,updatedBy:state.uid,updatedAt:new Date().toISOString()};
+      try{if(me){for(const [ok,oi] of Object.entries(state.people))if(ok!==pk&&oi&&oi.account===state.uid)await state.db.doc("people/"+ok).update({account:null});}
+        await state.db.doc("people/"+pk).set(body);close();toast(isNew?"Added "+name:"Saved");}catch(err){const er=$("pErr");er.hidden=false;er.textContent=errText(err);}});
     setTimeout(()=>{const f=isNew?$("pName"):null;f&&f.focus();},30);}
 
   /* ---------- private tab ---------- */
