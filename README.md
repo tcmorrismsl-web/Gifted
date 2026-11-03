@@ -27,7 +27,7 @@ Gift statuses: Idea → Bought → Wrapped/ready → Given.
 
 - `index.html` – the site (GitHub Pages serves it from `main`, root folder).
 - `firestore.rules` – database access rules; paste into the Firebase console whenever they change.
-- `manifest.webmanifest`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png` – lets you add Gifted to a phone's home screen like an app.
+- `manifest.webmanifest`, `icon-192.png`, `icon-512.png`, `icon-maskable-*.png`, `apple-touch-icon.png` – lets you add Gifted to a phone's home screen like an app. The current icon is the Christmas gnome. Phones keep the icon from when the shortcut was added, so after changing it, bump the `?v=` tag in `index.html` and re-add the shortcut.
 - `gifted.html` – the earlier claude.ai artifact version (uses claude.ai's built-in storage instead of Firebase). Kept for reference.
 
 ## Data model (Firestore)
