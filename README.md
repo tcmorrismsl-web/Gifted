@@ -11,6 +11,8 @@ Live site (GitHub Pages): https://tcmorrismsl-web.github.io/Gifted/
 - **Before you buy** – type a person and a gift idea to check it against everything they've already gotten.
 - **People** – one card per person with groups, birthday, Mother's/Father's Day flags, next gift, yearly budget and notes.
 - **Events** – **+ Event** adds a birthday party, holiday, shower or anything else with a date, optional time and place, and the people (or a whole group) who need a gift. It shows in Upcoming right away, listing "No gift yet for…" until gifts are logged. An event with nobody picked is just a dated reminder. A party for someone also stands in for their automatic birthday reminder. Events made on the private tab stay private.
+- **Import a list** – next to the People heading. Paste lines like `1/7: Bennet Amburgey` or `8/22: Kayci & Joey Plummer Anniversary`; it previews each line as a new card, an update to an existing card (matched by name), or skip. Couples' anniversaries become a couple card, or go on each spouse's own card for your own anniversary. Updates only change the date.
+- **Anniversaries** – a yearly date on a person or couple card, reminded in Upcoming like birthdays. On your spouse's card it shows as "Our anniversary" on your private list.
 - **Birthdays and holidays** – a person's next birthday, and Mother's Day (2nd Sunday in May) or Father's Day (3rd Sunday in June) for anyone flagged, show up in Upcoming 60 days ahead until a gift is logged for them. Tick **This is me** on your own card: your own dates never remind you, and your dates show on your spouse's private list instead of Household.
 - **Ledger** – every gift, searchable and filterable by status, year and occasion.
 - **On the way** – every gift marked as shipping, soonest arrival first, with a Track button that opens the carrier's page (UPS, USPS, FedEx, Amazon and DHL are recognized from the tracking number) and a one-tap Arrived button. It flags packages expected after their give-on date, packages past their expected arrival, and gifts still on the way within 3 days of being given. The same flags show in Upcoming, where *Mark arrived* comes before *Mark wrapped*.
@@ -35,7 +37,7 @@ Gift statuses: Idea → Bought → Wrapped/ready → Given.
 ## Data model (Firestore)
 
 - `gifts/<id>` – recipient, item, status (`idea` | `bought` | `ready` | `given`), from, occasion, due (give-on date, `YYYY-MM-DD`), date (date bought or given), year, price, store, link, notes, ship (`` | `on_way` | `arrived`), tracking, carrier (blank = detect from the number), arrives (expected arrival), arrivedOn, createdAt, createdBy, updatedAt, updatedBy (Firebase user ids)
-- `people/<slug of name>` – name, groups (list), birthday (`MM-DD`), birthYear, mothersDay, fathersDay, account (uid of the person's own sign-in, if it's them), budget (yearly $), notes, updatedAt, updatedBy
+- `people/<slug of name>` – name, groups (list), birthday (`MM-DD`), birthYear, anniversary (`MM-DD`), anniversaryYear, mothersDay, fathersDay, account (uid of the person's own sign-in, if it's them), budget (yearly $), notes, updatedAt, updatedBy
 - `members/<uid>` – name, email, photo, lastSeen for each signed-in account (used to show who added or changed a gift)
 - `events/<id>` – title, kind, date (`YYYY-MM-DD`), time (`HH:MM`), where, people (person keys), group, notes, createdAt, createdBy, updatedAt, updatedBy. Private events live at `private/<uid>/events/<id>`.
 - `meta/settings` – givers (names offered in the "From" field)

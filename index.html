@@ -135,6 +135,14 @@ label.opt input{width:18px;height:18px;margin:0;accent-color:var(--accent)}
 .ev-line .btn{padding:2px 8px;font-size:.78rem}
 .pchips{display:flex;flex-wrap:wrap;gap:6px}
 .pchips .chip{font-size:.82rem;padding:3px 10px}
+.imp-table{width:100%;border-collapse:collapse;font-size:.88rem}
+.imp-wrap{max-height:46vh;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.imp-table th{position:sticky;top:0;background:var(--sunk);text-align:left;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:6px 8px}
+.imp-table td{padding:6px 8px;border-top:1px solid var(--line);vertical-align:middle}
+.imp-table td.num{white-space:nowrap}
+.imp-table select{padding:4px 6px;font-size:.82rem}
+.imp-table tr.skip td{opacity:.5}
+.linkbtn{border:0;background:none;color:var(--accent);font-weight:600;cursor:pointer;padding:0}
 .run-missing{padding:10px 16px;border-top:1px dashed var(--line);background:var(--sunk);display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:.88rem}
 .run-missing .lab{color:var(--warn);font-weight:600}
 .addfor{border:1px dashed var(--muted);background:transparent;border-radius:999px;padding:2px 10px;cursor:pointer;font-size:.82rem}
@@ -305,7 +313,7 @@ label.opt input{width:18px;height:18px;margin:0;accent-color:var(--accent)}
   <section aria-labelledby="peopleTitle">
     <div class="section-head">
       <h2 id="peopleTitle">People</h2>
-      <span class="muted">Tap a person to filter the ledger; tap again for their groups, budget and notes.</span>
+      <span class="muted">Tap a person to filter the ledger; tap again for their groups, dates, budget and notes. <button class="linkbtn" id="importBtn" hidden>Import a list</button></span>
     </div>
     <div class="people" id="people"></div>
   </section>
@@ -396,7 +404,8 @@ const firebaseConfig = {
       const add=(kind,date,label)=>{if(date&&daysUntil(date)<=lim&&!coveredBy(pk,kind,date))out.push({pk,name:info.name,kind,date,label});};
       if(info.birthday){const d=nextBirthday(info.birthday);const turns=info.birthYear?(+d.slice(0,4)-info.birthYear):null;add("Birthday",d,`${info.name}'s birthday${turns&&turns>0&&turns<130?" (turns "+turns+")":""}`);}
       if(info.mothersDay)add("Mother's Day",nextHoliday("Mother's Day"),"Mother's Day");
-      if(info.fathersDay)add("Father's Day",nextHoliday("Father's Day"),"Father's Day");}
+      if(info.fathersDay)add("Father's Day",nextHoliday("Father's Day"),"Father's Day");
+      if(info.anniversary){const d=nextBirthday(info.anniversary);const yrs=info.anniversaryYear?(+d.slice(0,4)-info.anniversaryYear):null;add("Anniversary",d,(info.account?"Our anniversary":`${info.name}'s anniversary`)+(yrs&&yrs>0&&yrs<100?` (${yrs} year${yrs===1?"":"s"})`:""));}}
     return out;}
   function applySpace(){state.gifts=state.space==="private"?state.priv:state.shared;state.events=state.space==="private"?state.privEvents:state.sharedEvents;}
   const evCol=()=>state.space==="private"?"private/"+state.uid+"/events":"events";
@@ -521,6 +530,7 @@ const firebaseConfig = {
   function dateTags(info){const t=[];
     if(info.account&&info.account===state.uid)t.push(`<span class="gtag">You</span>`);
     if(info.birthday){const d=nextBirthday(info.birthday);const n=daysUntil(d);t.push(`<span class="gtag date">Birthday ${esc(fmtD(d,{month:"short",day:"numeric"}))}${n<=EVENT_DAYS?" · "+(n===0?"today":"in "+n+"d"):""}</span>`);}
+    if(info.anniversary){const d=nextBirthday(info.anniversary);const n=daysUntil(d);t.push(`<span class="gtag date">Anniversary ${esc(fmtD(d,{month:"short",day:"numeric"}))}${n<=EVENT_DAYS?" · "+(n===0?"today":"in "+n+"d"):""}</span>`);}
     if(info.mothersDay)t.push(`<span class="gtag date">Mother's Day</span>`);if(info.fathersDay)t.push(`<span class="gtag date">Father's Day</span>`);
     return t.length?`<span class="groups">${t.join("")}</span>`:"";}
   function renderPeople(){const ppl=peopleSummary().filter(p=>!state.group||groupsOf(p.key).includes(state.group));const el=$("people");
@@ -559,7 +569,7 @@ const firebaseConfig = {
     if(m.length){v.className="verdict hit";v.innerHTML=`<strong>Heads up: ${esc(theirs[0]?.recipient||who)} may already have something like this.</strong><ul>${m.slice(0,5).map(x=>`<li>${esc(x.g.item)} <span>${x.g._priv?"· on your private list ":""}· ${STATUS[x.g.status]||""} · ${esc(x.g.occasion||"")} ${esc(fmtDate(x.g))}${x.g.from?" · from "+esc(x.g.from):""}</span></li>`).join("")}</ul>`;}
     else if(!theirs.length){v.className="verdict clear";v.innerHTML=`<strong>Clear.</strong> Nothing logged for ${esc(who)} yet, so there's nothing to repeat.`;}
     else{v.className="verdict clear";v.innerHTML=`<strong>Clear to buy.</strong> Nothing similar among the ${theirs.length} thing${theirs.length===1?"":"s"} logged for ${esc(theirs[0].recipient)}.`;}}
-  function renderAll(){renderGroups();renderDatalists();renderFilters();renderRuns();renderPeople();renderLedger();renderCheck();const show=state.canWrite&&state.loaded&&!!state.db;$("addBtn").hidden=!show;$("addPersonBtn").hidden=!show;$("addEventBtn").hidden=!show;}
+  function renderAll(){renderGroups();renderDatalists();renderFilters();renderRuns();renderPeople();renderLedger();renderCheck();const show=state.canWrite&&state.loaded&&!!state.db;$("addBtn").hidden=!show;$("addPersonBtn").hidden=!show;$("addEventBtn").hidden=!show;$("importBtn").hidden=!show;}
 
   /* ---------- quick advance ---------- */
   async function advance(id,to){const g=state.gifts.find(x=>x.id===id);if(!g||state.busy.has(id))return;state.busy.add(id);renderRuns();
@@ -662,7 +672,9 @@ const firebaseConfig = {
   /* ---------- person sheet ---------- */
   function openPerson(k){const isNew=!k;const p=isNew?{key:"",name:"",gifts:[]}:peopleSummary().find(x=>x.key===k);if(!p)return;const info=isNew?{}:(state.people[k]||{});
     let groups=isNew?(state.group?[state.group]:[]):groupsOf(k).slice();
-    const [bm,bd]=(info.birthday||"-").split("-");
+    const [bm,bd]=(info.birthday||"-").split("-");const [am,ad]=(info.anniversary||"-").split("-");
+    const mSel=(id,v)=>`<select id="${id}" ${ro?"disabled":""}><option value="">—</option>${MONTHS.map((m,i)=>`<option value="${String(i+1).padStart(2,"0")}" ${v===String(i+1).padStart(2,"0")?"selected":""}>${m}</option>`).join("")}</select>`;
+    const dSel=(id,v)=>`<select id="${id}" ${ro?"disabled":""}><option value="">—</option>${Array.from({length:31},(_,i)=>String(i+1).padStart(2,"0")).map(x=>`<option value="${x}" ${v===x?"selected":""}>${+x}</option>`).join("")}</select>`;
     const hist=p.gifts.slice().sort((a,b)=>sortKey(b).localeCompare(sortKey(a)));const ro=!state.canWrite||!state.db;
     const sh=$("sheetHost");sh.innerHTML=`<div class="scrim" id="scrim"><form class="sheet" id="pForm" role="dialog" aria-modal="true" aria-labelledby="pTitle" novalidate>
       ${isNew?`<h2 id="pTitle">Add a person</h2><label for="pName">Name<input id="pName" autocomplete="off" required></label>`:`<h2 id="pTitle">${esc(p.name)}</h2><div class="person-hist">${hist.length?hist.map(g=>`<div>${esc(g.item)} <span>· ${STATUS[g.status]||""} · ${esc(g.occasion||"")} ${esc(fmtDate(g))}${g.price!=null?" · "+money(g.price):""}</span></div>`).join(""):'<span>No gifts yet.</span>'}</div>`}
@@ -673,6 +685,14 @@ const firebaseConfig = {
           <label for="pBMonth">Month<select id="pBMonth" ${ro?"disabled":""}><option value="">—</option>${MONTHS.map((m,i)=>`<option value="${String(i+1).padStart(2,"0")}" ${bm===String(i+1).padStart(2,"0")?"selected":""}>${m}</option>`).join("")}</select></label>
           <label for="pBDay">Day<select id="pBDay" ${ro?"disabled":""}><option value="">—</option>${Array.from({length:31},(_,i)=>String(i+1).padStart(2,"0")).map(x=>`<option value="${x}" ${bd===x?"selected":""}>${+x}</option>`).join("")}</select></label>
           <label for="pBYear">Year (optional)<input id="pBYear" type="number" min="1900" max="${thisYear}" inputmode="numeric" placeholder="For their age" value="${info.birthYear??""}" ${ro?"disabled":""}></label>
+        </div>
+      </div>
+      <div>
+        <div class="eyebrow" style="margin-bottom:6px">Anniversary</div>
+        <div class="grid3">
+          <label for="pAMonth">Month${mSel("pAMonth",am)}</label>
+          <label for="pADay">Day${dSel("pADay",ad)}</label>
+          <label for="pAYear">Year married (optional)<input id="pAYear" type="number" min="1900" max="${thisYear}" inputmode="numeric" value="${info.anniversaryYear??""}" ${ro?"disabled":""}></label>
         </div>
       </div>
       <div class="optrow">
@@ -704,11 +724,80 @@ const firebaseConfig = {
       const bmv=$("pBMonth").value,bdv=$("pBDay").value,byv=$("pBYear").value;
       if((bmv&&!bdv)||(!bmv&&bdv)){const er=$("pErr");er.hidden=false;er.textContent="Pick both a month and a day for the birthday, or leave both blank.";return;}
       if(bmv&&bdv&&+bdv>[31,29,31,30,31,30,31,31,30,31,30,31][+bmv-1]){const er=$("pErr");er.hidden=false;er.textContent=`${MONTHS[+bmv-1]} doesn't have ${+bdv} days.`;return;}
+      const amv=$("pAMonth").value,adv=$("pADay").value,ayv=$("pAYear").value;
+      if((amv&&!adv)||(!amv&&adv)){const er=$("pErr");er.hidden=false;er.textContent="Pick both a month and a day for the anniversary, or leave both blank.";return;}
       const me=$("pMe")?$("pMe").checked:false;const account=$("pMe")?(me?state.uid:null):(info.account||null);
-      const b=$("pBudget").value;const body={name,groups,budget:b===""?null:Number(b),notes:$("pNotes").value.trim(),birthday:bmv&&bdv?bmv+"-"+bdv:"",birthYear:byv?Number(byv):null,mothersDay:$("pMom").checked,fathersDay:$("pDad").checked,account,updatedBy:state.uid,updatedAt:new Date().toISOString()};
+      const b=$("pBudget").value;const body={name,groups,budget:b===""?null:Number(b),notes:$("pNotes").value.trim(),birthday:bmv&&bdv?bmv+"-"+bdv:"",birthYear:byv?Number(byv):null,anniversary:amv&&adv?amv+"-"+adv:"",anniversaryYear:ayv?Number(ayv):null,mothersDay:$("pMom").checked,fathersDay:$("pDad").checked,account,updatedBy:state.uid,updatedAt:new Date().toISOString()};
       try{if(me){for(const [ok,oi] of Object.entries(state.people))if(ok!==pk&&oi&&oi.account===state.uid)await state.db.doc("people/"+ok).update({account:null});}
         await state.db.doc("people/"+pk).set(body);close();toast(isNew?"Added "+name:"Saved");}catch(err){const er=$("pErr");er.hidden=false;er.textContent=errText(err);}});
     setTimeout(()=>{const f=isNew?$("pName"):null;f&&f.focus();},30);}
+
+  /* ---------- import a list of birthdays / anniversaries ---------- */
+  function parseList(text){const rows=[];
+    for(let line of String(text).split(/\r?\n/)){
+      line=line.replace(/^[\s\u25e6\u2022\u00b7*\-–—]+/,"").trim();if(!line)continue;
+      const m=line.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\s*[:\-–—]?\s+(.+)$/);if(!m)continue;
+      const mo=+m[1],da=+m[2];if(mo<1||mo>12||da<1||da>[31,29,31,30,31,30,31,31,30,31,30,31][mo-1])continue;
+      let yr=m[3]?+m[3]:null;if(yr&&yr<100)yr+=yr>((thisYear%100)+1)?1900:2000;
+      let rest=m[4].trim().replace(/[.\s]+$/,"");let kind="Birthday";
+      if(/\banniversary\b/i.test(rest)){kind="Anniversary";rest=rest.replace(/(?:[’']s)?\s*\banniversary\b/ig,"").trim();}
+      else rest=rest.replace(/(?:[’']s)?\s*\b(birthday|bday|b-day)\b/ig,"").trim();
+      if(!rest)continue;
+      const parts=rest.split(/\s*(?:&|\band\b|\+)\s*/i).filter(Boolean);let members=null;
+      if(parts.length===2){const last=parts[1].split(/\s+/).slice(1).join(" ");members=[parts[0].split(/\s+/).length===1&&last?parts[0]+" "+last:parts[0],parts[1]];}
+      rows.push({mmdd:String(mo).padStart(2,"0")+"-"+String(da).padStart(2,"0"),year:yr,kind,name:rest.replace(/\s+/g," "),members});}
+    return rows;}
+  function findPerson(full){const k=key(full);if(state.people[k]&&state.people[k].name)return k;
+    const toks=full.toLowerCase().split(/\s+/);const first=toks[0],last=toks.length>1?toks[toks.length-1]:"";
+    const hits=Object.entries(state.people).filter(([pk,p])=>{if(!p||!p.name)return false;const t=p.name.toLowerCase().split(/\s+/);
+      if(t[0]!==first)return false;if(t.length===1)return true;return last&&t[t.length-1]===last;}).map(([pk])=>pk);
+    return hits.length===1?hits[0]:null;}
+  function openImport(){if(!state.canWrite||!state.db)return;let rows=[];
+    const sh=$("sheetHost");sh.innerHTML=`<div class="scrim" id="scrim"><form class="sheet" id="iForm" role="dialog" aria-modal="true" aria-labelledby="iTitle" novalidate>
+      <h2 id="iTitle">Import birthdays and anniversaries</h2>
+      <label for="iText"><span>Paste a list, one per line, like <span class="num">1/7: Bennet Amburgey</span> or <span class="num">8/22: Kayci &amp; Joey Plummer Anniversary</span>. Month headings and blank lines are skipped.</span>
+        <textarea id="iText" style="min-height:140px" placeholder="1/7: Bennet Amburgey&#10;3/20: Whitney Morris&#10;8/22: Kayci &amp; Joey Plummer Anniversary"></textarea></label>
+      <label for="iGroup">Also add new people to a group (optional)<input id="iGroup" list="groupList" placeholder="e.g. Family" autocomplete="off"></label>
+      <div id="iPreview"></div>
+      <div class="err" id="iErr" hidden></div>
+      <div class="sheet-actions"><div class="right"><button type="button" class="btn" id="iCancel">Cancel</button><button type="submit" class="btn primary" id="iSave" disabled>Import</button></div></div>
+    </form></div>`;
+    const close=()=>{sh.innerHTML="";document.removeEventListener("keydown",onEsc);};function onEsc(e){if(e.key==="Escape")close();}
+    document.addEventListener("keydown",onEsc);$("iCancel").onclick=close;$("scrim").addEventListener("mousedown",e=>{if(e.target.id==="scrim")close();});
+    function plan(r){const opts=[];const label=`${MONTHS[+r.mmdd.slice(0,2)-1].slice(0,3)} ${+r.mmdd.slice(3)}`;
+      if(r.kind==="Anniversary"&&r.members){const inList=m=>rows.some(x=>x.kind==="Birthday"&&key(x.name)===key(m));
+        const a=findPerson(r.members[0])||(inList(r.members[0])?"pending":null),b=findPerson(r.members[1])||(inList(r.members[1])?"pending":null);const ck=findPerson(r.name);
+        const linked=[a,b].some(k=>k&&k!=="pending"&&state.people[k].account)||(state.myFirst&&r.members.some(m=>m.split(/\s+/)[0].toLowerCase()===state.myFirst));
+        const nm=(k,m)=>k==="pending"?m.split(/\s+/)[0]:nameOf(k);
+        if(a&&b)opts.push({v:"each",t:`Add to ${nm(a,r.members[0])}'s and ${nm(b,r.members[1])}'s cards`});
+        opts.push(ck?{v:"upd:"+ck,t:`Update ${nameOf(ck)}`}:{v:"new",t:`New couple card`});
+        if(linked&&a&&b)opts.unshift(opts.splice(0,1)[0]);else if(a&&b)opts.push(opts.shift());
+      }else{const k=findPerson(r.name);if(k)opts.push({v:"upd:"+k,t:`Update ${nameOf(k)}`});opts.push({v:"new",t:"New person"});}
+      opts.push({v:"skip",t:"Skip"});return {label,opts};}
+    function draw(){rows=parseList($("iText").value);const pv=$("iPreview");
+      if(!rows.length){pv.innerHTML=$("iText").value.trim()?`<div class="hint">No dates found yet. Each line needs a date like 3/20 followed by a name.</div>`:"";$("iSave").disabled=true;return;}
+      pv.innerHTML=`<div class="imp-wrap"><table class="imp-table"><thead><tr><th>Date</th><th>Name</th><th>Type</th><th>Action</th></tr></thead><tbody>${rows.map((r,i)=>{const p=plan(r);r.choice=r.choice||p.opts[0].v;
+        return `<tr data-i="${i}" class="${r.choice==="skip"?"skip":""}"><td class="num">${esc(p.label)}${r.year?" "+r.year:""}</td><td>${esc(r.name)}</td><td>${r.kind}</td><td><select data-i="${i}" aria-label="Action for ${esc(r.name)}">${p.opts.map(o=>`<option value="${esc(o.v)}">${esc(o.t)}</option>`).join("")}</select></td></tr>`;}).join("")}</tbody></table></div>
+        <div class="hint" id="iCount"></div>`;
+      pv.querySelectorAll("select[data-i]").forEach(sel=>{const r=rows[+sel.dataset.i];sel.value=r.choice;sel.addEventListener("change",()=>{r.choice=sel.value;sel.closest("tr").classList.toggle("skip",r.choice==="skip");count();});});
+      count();}
+    function count(){const n=rows.filter(r=>r.choice!=="skip").length,nu=rows.filter(r=>r.choice==="new").length;$("iCount").textContent=`${n} to import: ${nu} new, ${n-nu} ${n-nu===1?"update":"updates"} to existing cards. Updates only change the date, nothing else on the card.`;$("iSave").disabled=!n;$("iSave").textContent=n?`Import ${n}`:"Import";}
+    let tmr;$("iText").addEventListener("input",()=>{clearTimeout(tmr);tmr=setTimeout(()=>{rows.forEach(r=>delete r.choice);draw();},250);});
+    $("iForm").addEventListener("submit",async e=>{e.preventDefault();const grp=$("iGroup").value.trim();$("iSave").disabled=true;let done=0;
+      const dateFields=r=>r.kind==="Anniversary"?{anniversary:r.mmdd,anniversaryYear:r.year}:{birthday:r.mmdd,birthYear:r.year};
+      const stamp=()=>({updatedBy:state.uid,updatedAt:new Date().toISOString()});
+      const target=m=>{const k=findPerson(m);if(k)return k;const x=rows.find(y=>y.kind==="Birthday"&&key(y.name)===key(m));if(!x||x.choice==="skip")return null;return x.choice==="new"?key(x.name):x.choice.slice(4);};
+      const ordered=rows.filter(r=>r.kind!=="Anniversary").concat(rows.filter(r=>r.kind==="Anniversary"));
+      try{for(const r of ordered){if(r.choice==="skip")continue;
+          if(r.choice==="new"){const pk=key(r.name);const ex=state.people[pk];
+            if(ex&&ex.name){await state.db.doc("people/"+pk).update({...dateFields(r),...stamp()});}
+            else await state.db.doc("people/"+pk).set({name:r.name,groups:grp?[grp]:[],budget:null,notes:"",birthday:"",birthYear:null,anniversary:"",anniversaryYear:null,mothersDay:false,fathersDay:false,account:null,...dateFields(r),...stamp()});}
+          else if(r.choice==="each"){for(const m of r.members){const k=target(m);if(k)await state.db.doc("people/"+k).update({...dateFields(r),...stamp()});}}
+          else if(r.choice.startsWith("upd:"))await state.db.doc("people/"+r.choice.slice(4)).update({...dateFields(r),...stamp()});
+          done++;}
+        close();toast(`Imported ${done}`);}
+      catch(err){$("iSave").disabled=false;const er=$("iErr");er.hidden=false;er.textContent=(done?`Saved ${done} before stopping. `:"")+errText(err);}});
+    setTimeout(()=>$("iText").focus(),30);}
 
   /* ---------- event sheet ---------- */
   function openEvent(ev){if(!state.canWrite||!state.db)return;const isNew=!ev;ev=ev||{date:"",people:[],group:state.group||""};
@@ -768,6 +857,7 @@ const firebaseConfig = {
   $("addBtn").onclick=()=>openGift(null);
   $("addPersonBtn").onclick=()=>openPerson(null);
   $("addEventBtn").onclick=()=>openEvent(null);
+  $("importBtn").onclick=()=>openImport();
   ["fSearch","fStatus","fYear","fOcc"].forEach(id=>$(id).addEventListener("input",renderLedger));
   ["chkWho","chkWhat"].forEach(id=>$(id).addEventListener("input",renderCheck));
   $("groupbar").addEventListener("click",e=>{const b=e.target.closest("[data-group]");if(!b)return;state.group=b.dataset.group;state.sel="";renderGroups();renderRuns();renderPeople();renderLedger();});
@@ -814,7 +904,7 @@ const firebaseConfig = {
     stopAll();state.gifts=[];state.shared=[];state.priv=[];state.events=[];state.sharedEvents=[];state.privEvents=[];state.eventsBlocked=false;state.rulesOk=null;state.people={};state.members={};state.loaded=false;state.denied=false;$("sheetHost").innerHTML="";
     if(!u){$("meBadge").hidden=true;state.db=null;showGate("Sign in with Google to see and add gifts.","Sign in with Google","");return;}
     $("gate").hidden=true;$("app").hidden=false;
-    state.db=api;state.uid=u.uid;state.canWrite=true;
+    state.db=api;state.uid=u.uid;state.myFirst=String(u.displayName||"").trim().split(/\s+/)[0].toLowerCase();state.canWrite=true;
     state.user={profiles:async ids=>{const out={};for(const id of [].concat(ids)){const m=state.members[id];out[id]={id,name:(m&&m.name)||(id===u.uid?(u.displayName||""):"")};}return out;}};
     const av=$("meAvatar");if(u.photoURL){av.src=u.photoURL;av.referrerPolicy="no-referrer";av.hidden=false;}else av.hidden=true;
     const t=$("meText");t.textContent="Signed in as ";const b=document.createElement("b");b.textContent=u.displayName||u.email||"you";t.append(b);$("meBadge").hidden=false;
