@@ -6,10 +6,13 @@ Live site (GitHub Pages): https://tcmorrismsl-web.github.io/Gifted/
 
 ## What's on the page
 
+Each section is its own tab: Upcoming (opens first), On the way, Before you buy, People and Ledger. On phones the tabs sit in a bar at the bottom of the screen. Pinch and double-tap zoom are turned off. In every pop-up, Cancel/Close and Save stay pinned at the top while you scroll.
+
+
 - **Group filter** – chips across the top (e.g. "Morris family", "Teachers") filter the whole page.
 - **Upcoming** – gifts with a give-on date, grouped by day. Each day shows how many gifts are ready, one-tap *Mark bought / Mark wrapped / Mark given* buttons, a warning when a day is 3 days out or less with something not yet bought or wrapped, and a "No gift yet for" row listing group members who still need a gift for that day.
 - **Before you buy** – type a person and a gift idea to check it against everything they've already gotten.
-- **People** – one card per person with groups, birthday, Mother's/Father's Day flags, next gift, yearly budget and notes.
+- **People** – tap anyone to open their card, with their gift history and a Show in ledger button. One card per person with groups, birthday, Mother's/Father's Day flags, next gift, yearly budget and notes.
 - **Events** – **+ Event** adds a birthday party, holiday, shower or anything else with a date, optional time and place, and the people (or a whole group) who need a gift. It shows in Upcoming right away, listing "No gift yet for…" until gifts are logged. An event with nobody picked is just a dated reminder. A party for someone also stands in for their automatic birthday reminder. Events made on the private tab stay private.
 - **Import a list** – next to the People heading. Paste lines like `1/7: Bennet Amburgey` or `8/22: Kayci & Joey Plummer Anniversary`; it previews each line as a new card, an update to an existing card (matched by name), or skip. Couples' anniversaries become a couple card, or go on each spouse's own card for your own anniversary. Updates only change the date.
 - **Anniversaries** – a yearly date on a person or couple card, reminded in Upcoming like birthdays. On your spouse's card it shows as "Our anniversary" on your private list.

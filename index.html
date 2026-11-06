@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#b3264a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Gifted">
@@ -78,10 +78,37 @@ header.top .sub{margin-top:6px;color:var(--muted)}
 .me img{width:24px;height:24px;border-radius:50%;object-fit:cover;border:1px solid var(--line)}
 .me b{color:var(--fg);font-weight:600}
 .byline{font-size:.8rem;color:var(--muted)}
-.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line)}
-.tabs button{border:0;background:none;padding:10px 14px;cursor:pointer;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;display:flex;align-items:center;gap:6px}
+/* No zooming: pinch and double-tap are turned off, and inputs are 16px on touch screens so iPhones don't zoom in on focus */
+html{touch-action:pan-x pan-y}
+@media (pointer:coarse){input,select,textarea,.imp-table select{font-size:16px}}
+/* Household / private switch */
+.tabs{display:inline-flex;justify-self:start;gap:2px;padding:3px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
+.tabs button{border:0;background:none;padding:6px 14px;border-radius:999px;cursor:pointer;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:6px}
 .tabs button:hover{color:var(--fg)}
-.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.tabs button[aria-selected="true"]{background:var(--fg);color:var(--bg)}
+/* Section tabs: a sticky bar on wide screens, a bottom bar on phones */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:21;background:var(--bg)}
+.secnav{display:flex;gap:2px;position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);overflow-x:auto}
+.secnav button{flex:none;position:relative;border:0;background:none;padding:12px 14px;margin-bottom:-1px;border-bottom:2px solid transparent;cursor:pointer;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:7px}
+.secnav button:hover{color:var(--fg)}
+.secnav button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.secnav svg{width:18px;height:18px;flex:none}
+.secnav .short{display:none}
+.badge{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--accent);color:var(--accent-fg);font-size:.7rem;font-weight:700;display:inline-grid;place-items:center;line-height:1}
+.selbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-bottom:12px;font-size:.9rem}
+@media (max-width:760px){
+  .secnav{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:30;border-bottom:0;border-top:1px solid var(--line);background:var(--surface);justify-content:space-around;overflow:visible;
+    padding:4px max(4px,env(safe-area-inset-right,0px)) calc(4px + env(safe-area-inset-bottom,0px)) max(4px,env(safe-area-inset-left,0px))}
+  .secnav button{flex:1;min-width:0;flex-direction:column;gap:3px;padding:6px 2px;margin:0;border-bottom:0;font-size:.7rem;font-weight:600}
+  .secnav button[aria-selected="true"]{color:var(--accent)}
+  .secnav svg{width:22px;height:22px}
+  .secnav .long{display:none}.secnav .short{display:inline}
+  .secnav .badge{position:absolute;top:1px;left:calc(50% + 6px);min-width:16px;height:16px;font-size:.62rem}
+  .wrap{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+  .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+}
+.sheet-top{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:8px;background:var(--surface);padding:16px 0 12px;border-bottom:1px solid var(--line)}
+.sheet-top h2{flex:1;min-width:0;overflow-wrap:anywhere}
 .private-note{display:flex;gap:10px;align-items:flex-start;background:var(--accent-soft);color:var(--accent);border-radius:10px;padding:12px 14px;font-size:.9rem}
 .private-note svg{flex:none;margin-top:2px}
 .private-note.bad{background:var(--warn-soft);color:var(--warn)}
@@ -216,10 +243,11 @@ label.opt input{width:18px;height:18px;margin:0;accent-color:var(--accent)}
 
 /* Sheet (modal) */
 .scrim{position:fixed;inset:0;background:rgba(10,15,30,.45);display:grid;place-items:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));z-index:50}
-.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);width:min(640px,100%);max-height:100%;overflow:auto;padding:20px;display:grid;gap:14px}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);width:min(640px,100%);max-height:100%;overflow:auto;padding:0 20px 20px;display:grid;gap:14px}
 .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 @media (max-width:520px){.grid2,.grid3{grid-template-columns:1fr}}
+.grid3.dategrid{grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1.3fr)}
 .seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
 .seg button{flex:1;border:0;background:transparent;padding:8px 6px;cursor:pointer;font-size:.88rem}
 .seg button+button{border-left:1px solid var(--line)}
@@ -276,17 +304,18 @@ label.opt input{width:18px;height:18px;margin:0;accent-color:var(--accent)}
   </div>
   <div class="private-note" id="privateNote" hidden><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span id="privateText">Only you can see this list, even when you're both signed in on the same page. Use it for gifts for each other. Before you buy checks this list too.</span></div>
 
+  <nav class="secnav" id="secnav" role="tablist" aria-label="Sections">
+    <button role="tab" data-tab="upcoming" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Upcoming</span><span class="badge" id="badgeUp" hidden></span></button>
+    <button role="tab" data-tab="onway" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg><span>On the way</span><span class="badge" id="badgeOw" hidden></span></button>
+    <button role="tab" data-tab="check" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21M7.8 10.6l2 2 3.6-3.8"/></svg><span class="long">Before you buy</span><span class="short">Check</span></button>
+    <button role="tab" data-tab="people" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.3-5.5 6.5-5.5s5.7 2 6.5 5.5"/><circle cx="17" cy="9" r="2.6"/><path d="M16.5 14.6c2.6.2 4.4 2 5 5"/></svg><span>People</span></button>
+    <button role="tab" data-tab="ledger" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg><span>Ledger</span></button>
+  </nav>
+
   <nav class="groupbar" id="groupbar" aria-label="Groups"></nav>
 
-  <section aria-labelledby="owTitle" id="owSection" hidden>
-    <div class="section-head">
-      <h2 id="owTitle">On the way</h2>
-      <span class="muted" id="owNote"></span>
-    </div>
-    <div class="run" id="onway"></div>
-  </section>
 
-  <section aria-labelledby="upTitle">
+  <section aria-labelledby="upTitle" id="upSection" data-tab="upcoming">
     <div class="section-head">
       <h2 id="upTitle">Upcoming</h2>
       <span class="muted" id="upNote">Gifts with a give-on date, grouped by the day they go out.</span>
@@ -294,7 +323,15 @@ label.opt input{width:18px;height:18px;margin:0;accent-color:var(--accent)}
     <div class="runs" id="runs"></div>
   </section>
 
-  <section class="check" aria-labelledby="checkTitle">
+  <section aria-labelledby="owTitle" id="owSection" data-tab="onway" hidden>
+    <div class="section-head">
+      <h2 id="owTitle">On the way</h2>
+      <span class="muted" id="owNote"></span>
+    </div>
+    <div class="run" id="onway"></div>
+  </section>
+
+  <section class="check" aria-labelledby="checkTitle" id="checkSection" data-tab="check" hidden>
     <div class="check-head">
       <h2 id="checkTitle">Before you buy</h2>
       <span class="muted">Check an idea against everything that person has already gotten.</span>
@@ -310,15 +347,15 @@ label.opt input{width:18px;height:18px;margin:0;accent-color:var(--accent)}
     <div id="verdict" class="verdict hint">Type a name and a gift idea to check it.</div>
   </section>
 
-  <section aria-labelledby="peopleTitle">
+  <section aria-labelledby="peopleTitle" id="peopleSection" data-tab="people" hidden>
     <div class="section-head">
       <h2 id="peopleTitle">People</h2>
-      <span class="muted">Tap a person to filter the ledger; tap again for their groups, dates, budget and notes. <button class="linkbtn" id="importBtn" hidden>Import a list</button></span>
+      <span class="muted">Tap a person for their gifts, groups, dates, budget and notes. <button class="linkbtn" id="importBtn" hidden>Import a list</button></span>
     </div>
     <div class="people" id="people"></div>
   </section>
 
-  <section aria-labelledby="ledgerTitle">
+  <section aria-labelledby="ledgerTitle" id="ledgerSection" data-tab="ledger" hidden>
     <div class="section-head">
       <h2 id="ledgerTitle">Ledger</h2>
     </div>
@@ -330,6 +367,7 @@ label.opt input{width:18px;height:18px;margin:0;accent-color:var(--accent)}
       <select id="fYear" aria-label="Year"><option value="">All years</option></select>
       <select id="fOcc" aria-label="Occasion"><option value="">All occasions</option></select>
     </div>
+    <div class="selbar" id="selBar" hidden></div>
     <div class="ledger" id="ledger"></div>
   </section>
 </div>
@@ -465,7 +503,8 @@ const firebaseConfig = {
   /* ---------- render: upcoming ---------- */
   function renderOnWay(){const sec=$("owSection");
     const items=state.gifts.filter(g=>g.ship==="on_way"&&g.status!=="given"&&inGroup(g.recipient)).sort((a,b)=>(a.arrives||"9999").localeCompare(b.arrives||"9999"));
-    sec.hidden=!state.loaded||!items.length;if(sec.hidden)return;
+    const bw=$("badgeOw");bw.textContent=items.length;bw.hidden=!items.length;
+    if(!items.length){$("owNote").textContent="";$("onway").innerHTML=`<div class="empty"><h3>Nothing shipping right now</h3><div>Add a tracking number to a gift and it shows up here until it arrives.</div></div>`;return;}
     const late=items.filter(g=>shipIssue(g)).length;
     $("owNote").textContent=`${items.length} package${items.length===1?"":"s"}${late?` · ${late} need${late===1?"s":""} a look`:""}`;
     $("onway").innerHTML=items.map(g=>{const iss=shipIssue(g);const u=trackUrl(g);const n=String(g.tracking||"").replace(/\s+/g,"");return `<div class="run-row">
@@ -485,14 +524,14 @@ const firebaseConfig = {
     const keys=Object.keys(buckets).filter(d=>d>=t||buckets[d].some(g=>g.status!=="given")).sort();
     const noDue=state.gifts.filter(g=>!g.due&&(g.status==="bought"||g.status==="ready")&&inGroup(g.recipient));
     if(!keys.length){el.innerHTML=blocked+`<div class="empty card"><h3>Nothing scheduled</h3><div>Give a gift a <b>give-on</b> date and it lands here, grouped by day, with what's still to buy or wrap. Birthdays and Mother's or Father's Day show up here ${EVENT_DAYS} days ahead once they're on someone's card. Use <b>+ Event</b> for parties and holidays.</div>${noDue.length?`<div class="hint">${noDue.length} bought gift${noDue.length===1?" has":"s have"} no give-on date yet.</div>`:""}</div>`;$("upNote").textContent="Gifts with a give-on date, grouped by the day they go out.";return;}
-    let open=0,needAll=0;
+    let open=0,needAll=0,attn=0;
     el.innerHTML=keys.map(d=>{const gs=buckets[d].slice().sort((a,b)=>a.recipient.localeCompare(b.recipient));const ev=(evs[d]||[]).slice().sort((a,b)=>a.name.localeCompare(b.name));const uev=(uevs[d]||[]).slice().sort((a,b)=>(a.time||"").localeCompare(b.time||""));
       const recips0=new Set(gs.map(g=>key(g.recipient)));const seen0=new Set(ev.map(e=>e.pk));const umiss=[];
       for(const e of uev)for(const k of eventPeople(e))if(!recips0.has(k)&&!seen0.has(k)&&!giftNear(k,d)){seen0.add(k);umiss.push({key:k,name:nameOf(k),occ:e.kind||e.title||""});}
       const need=ev.length+umiss.length;needAll+=need;const n=gs.length+need;
       const c={idea:0,bought:0,ready:0,given:0};gs.forEach(g=>c[g.status]=(c[g.status]||0)+1);
       const dleft=daysUntil(d);const allDone=!need&&gs.length>0&&c.given===gs.length;const late=dleft<0&&!allDone;const onway=gs.filter(g=>g.status==="bought"&&g.ship==="on_way").length;const issues=gs.some(g=>shipIssue(g));const soon=(dleft<=3&&(c.idea+c.bought)>0)||issues||(need>0&&dleft<=14);
-      if(!allDone)open+=gs.length-c.given;
+      if(!allDone)open+=gs.length-c.given;if((soon||late)&&!allDone)attn++;
       const evNames=new Set(ev.map(e=>e.pk));
       const occs=[...new Set([...uev.map(evLabel),...ev.map(e=>e.label),...gs.map(g=>g.occasion).filter(o=>o&&!(o==="Birthday"&&ev.some(e=>e.kind==="Birthday")))])].join(" · ")||"Gifts going out";
       const recips=new Set(gs.map(g=>key(g.recipient)));
@@ -517,7 +556,7 @@ const firebaseConfig = {
         ${!n&&state.canWrite?`<div class="run-missing"><span class="muted">No gifts on the list for this yet.</span><button class="addfor" data-addfor="" data-due="${esc(d)}" data-occ="${esc(uev[0]?(uev[0].kind||uev[0].title||""):"")}">+ Add a gift</button></div>`:""}
         ${missing.length?`<div class="run-missing"><span class="lab">No gift yet for</span>${missing.map(m=>state.canWrite?`<button class="addfor" data-addfor="${esc(m.name)}" data-due="${esc(d)}" data-occ="${esc(m.occ||"")}">+ ${esc(m.name)}</button>`:`<span>${esc(m.name)}</span>`).join("")}</div>`:""}
       </article>`;}).join("")+(noDue.length?`<div class="hint">${noDue.length} bought gift${noDue.length===1?" has":"s have"} no give-on date, so ${noDue.length===1?"it isn't":"they aren't"} shown here. Filter the ledger by Bought or Ready to find ${noDue.length===1?"it":"them"}.</div>`:"");
-    el.innerHTML=blocked+el.innerHTML;
+    el.innerHTML=blocked+el.innerHTML;{const bu=$("badgeUp");bu.textContent=attn;bu.hidden=!attn;}
     $("upNote").textContent=[open&&`${open} gift${open===1?"":"s"} still to hand out`,needAll&&`${needAll} ${needAll===1?"person needs":"people need"} a gift`].filter(Boolean).join(" · ")||"Everything scheduled has been given.";}
 
   /* ---------- render: rest ---------- */
@@ -548,6 +587,7 @@ const firebaseConfig = {
     return state.gifts.filter(g=>(!state.sel||key(g.recipient)===state.sel)&&inGroup(g.recipient)&&(!st||(st==="onway"?(g.ship==="on_way"&&g.status!=="given"):g.status===st))&&(!yr||yearOf(g)===+yr)&&(!oc||g.occasion===oc)&&(!q||[g.item,g.recipient,g.store,g.notes,g.occasion,g.from].join(" ").toLowerCase().includes(q))).sort((a,b)=>sortKey(b).localeCompare(sortKey(a)));}
   function whenCell(g){if(g.status!=="given"&&g.due)return `<b>Give on</b>${esc(fmtD(g.due))}`;if(g.status==="given")return (g.date||g.due)?`<b>Given</b>${esc(fmtD(g.date||g.due))}`:(g.year?esc(g.year):"—");return g.date?`<b>Bought</b>${esc(fmtD(g.date))}`:"—";}
   function renderLedger(){const el=$("ledger");
+    const sb=$("selBar");if(state.sel){const nm=(peopleSummary().find(p=>p.key===state.sel)||{}).name||state.sel;sb.innerHTML=`<span>Showing gifts for <b>${esc(nm)}</b></span><button class="btn sm" data-act="unsel">Show everyone</button>`;sb.hidden=false;}else{sb.hidden=true;sb.innerHTML="";}
     if(!state.loaded){el.innerHTML=`<div class="empty"><h3>Opening the ledger…</h3><div>Your gifts will appear here in a moment.</div></div>`;return;}
     if(!state.gifts.length){el.innerHTML=`<div class="empty"><h3>No gifts logged yet</h3><div>Log a gift you've given (or an idea you're considering) and it will show up here, newest first.</div>${state.canWrite?`<button class="btn primary" data-act="add">+ Log the first gift</button>`:""}</div>`;return;}
     const rows=filtered();
@@ -586,7 +626,7 @@ const firebaseConfig = {
     g=g||Object.assign({recipient:state.sel?(peopleSummary().find(p=>p.key===state.sel)?.name||""):"",status:"idea",from:state.givers[0]||""},preset||{});
     const groups=allGroups();let mode=(isNew&&state.group&&!preset&&!state.sel)?"group":"person";
     const sh=$("sheetHost");sh.innerHTML=`<div class="scrim" id="scrim"><form class="sheet" id="giftForm" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" novalidate>
-      <h2 id="sheetTitle">${isNew?"Log a gift":"Edit gift"}</h2>
+      <div class="sheet-top"><h2 id="sheetTitle">${isNew?"Log a gift":"Edit gift"}</h2><button type="button" class="btn" id="gCancel">Cancel</button><button type="submit" class="btn primary" id="gSave">${isNew?"Save gift":"Save"}</button></div>
       <div class="grid2">
         <div>
           ${isNew&&groups.length?`<div class="forpick" id="forPick"><button type="button" data-mode="person" aria-pressed="${mode==="person"}">One person</button><button type="button" data-mode="group" aria-pressed="${mode==="group"}">Everyone in a group</button></div>`:""}
@@ -625,10 +665,7 @@ const firebaseConfig = {
       <div class="hint" id="groupHint" ${mode==="group"?"":"hidden"}></div>
       ${isNew?"":`<div class="byline" id="gBy"></div>`}
       <div class="err" id="gErr" hidden></div>
-      <div class="sheet-actions">
-        ${isNew?"":`<button type="button" class="btn danger" id="gDel">Delete</button>`}
-        <div class="right"><button type="button" class="btn" id="gCancel">Cancel</button><button type="submit" class="btn primary" id="gSave">${isNew?"Save gift":"Save changes"}</button></div>
-      </div>
+      ${isNew?"":`<div class="sheet-actions"><button type="button" class="btn danger" id="gDel">Delete gift</button></div>`}
     </form></div>`;
     let status=g.status||"idea";
     if(!isNew&&state.user){const ids=[g.createdBy,g.updatedBy].filter(Boolean);if(ids.length)state.user.profiles(ids).then(ps=>{const el=$("gBy");if(!el)return;const nm=id=>(ps[id]&&ps[id].name)||"Someone";const parts=[];
@@ -677,22 +714,23 @@ const firebaseConfig = {
     const dSel=(id,v)=>`<select id="${id}" ${ro?"disabled":""}><option value="">—</option>${Array.from({length:31},(_,i)=>String(i+1).padStart(2,"0")).map(x=>`<option value="${x}" ${v===x?"selected":""}>${+x}</option>`).join("")}</select>`;
     const hist=p.gifts.slice().sort((a,b)=>sortKey(b).localeCompare(sortKey(a)));const ro=!state.canWrite||!state.db;
     const sh=$("sheetHost");sh.innerHTML=`<div class="scrim" id="scrim"><form class="sheet" id="pForm" role="dialog" aria-modal="true" aria-labelledby="pTitle" novalidate>
-      ${isNew?`<h2 id="pTitle">Add a person</h2><label for="pName">Name<input id="pName" autocomplete="off" required></label>`:`<h2 id="pTitle">${esc(p.name)}</h2><div class="person-hist">${hist.length?hist.map(g=>`<div>${esc(g.item)} <span>· ${STATUS[g.status]||""} · ${esc(g.occasion||"")} ${esc(fmtDate(g))}${g.price!=null?" · "+money(g.price):""}</span></div>`).join(""):'<span>No gifts yet.</span>'}</div>`}
+      <div class="sheet-top"><h2 id="pTitle">${isNew?"Add a person":esc(p.name)}</h2><button type="button" class="btn" id="pCancel">Close</button>${ro?"":`<button type="submit" class="btn primary">${isNew?"Add":"Save"}</button>`}</div>
+      ${isNew?`<label for="pName">Name<input id="pName" autocomplete="off" required></label>`:`${p.gifts.length?`<div class="selbar" style="margin:0"><span class="muted">${p.gifts.length} gift${p.gifts.length===1?"":"s"} on this list</span><button type="button" class="btn sm" id="pLedger">Show in ledger</button></div>`:""}<div class="person-hist">${hist.length?hist.map(g=>`<div>${esc(g.item)} <span>· ${STATUS[g.status]||""} · ${esc(g.occasion||"")} ${esc(fmtDate(g))}${g.price!=null?" · "+money(g.price):""}</span></div>`).join(""):'<span>No gifts yet.</span>'}</div>`}
       <div><div class="eyebrow" style="margin-bottom:6px">Groups</div><div class="gpick" id="gpick"></div></div>
       <div>
         <div class="eyebrow" style="margin-bottom:6px">Birthday</div>
-        <div class="grid3">
+        <div class="grid3 dategrid">
           <label for="pBMonth">Month<select id="pBMonth" ${ro?"disabled":""}><option value="">—</option>${MONTHS.map((m,i)=>`<option value="${String(i+1).padStart(2,"0")}" ${bm===String(i+1).padStart(2,"0")?"selected":""}>${m}</option>`).join("")}</select></label>
           <label for="pBDay">Day<select id="pBDay" ${ro?"disabled":""}><option value="">—</option>${Array.from({length:31},(_,i)=>String(i+1).padStart(2,"0")).map(x=>`<option value="${x}" ${bd===x?"selected":""}>${+x}</option>`).join("")}</select></label>
-          <label for="pBYear">Year (optional)<input id="pBYear" type="number" min="1900" max="${thisYear}" inputmode="numeric" placeholder="For their age" value="${info.birthYear??""}" ${ro?"disabled":""}></label>
+          <label for="pBYear">Year<input id="pBYear" type="number" min="1900" max="${thisYear}" inputmode="numeric" placeholder="For their age" value="${info.birthYear??""}" ${ro?"disabled":""}></label>
         </div>
       </div>
       <div>
         <div class="eyebrow" style="margin-bottom:6px">Anniversary</div>
-        <div class="grid3">
+        <div class="grid3 dategrid">
           <label for="pAMonth">Month${mSel("pAMonth",am)}</label>
           <label for="pADay">Day${dSel("pADay",ad)}</label>
-          <label for="pAYear">Year married (optional)<input id="pAYear" type="number" min="1900" max="${thisYear}" inputmode="numeric" value="${info.anniversaryYear??""}" ${ro?"disabled":""}></label>
+          <label for="pAYear">Year<input id="pAYear" type="number" min="1900" max="${thisYear}" inputmode="numeric" value="${info.anniversaryYear??""}" ${ro?"disabled":""}></label>
         </div>
       </div>
       <div class="optrow">
@@ -707,7 +745,7 @@ const firebaseConfig = {
       </div>
       <label for="pNotes">Notes (sizes, likes, already has…)<textarea id="pNotes" ${ro?"disabled":""}>${esc(info.notes||"")}</textarea></label>
       <div class="err" id="pErr" hidden></div>
-      <div class="sheet-actions"><div class="right"><button type="button" class="btn" id="pCancel">Close</button>${ro?"":`<button type="submit" class="btn primary">${isNew?"Add person":"Save"}</button>`}</div></div>
+
     </form></div>`;
     function drawGroups(){const all=[...new Set([...allGroups().map(x=>x.name),...groups])].sort((a,b)=>a.localeCompare(b));
       $("gpick").innerHTML=all.map(n=>`<button type="button" class="chip" data-g="${esc(n)}" aria-pressed="${groups.includes(n)}" ${ro?"disabled":""}>${esc(n)}</button>`).join("")+(ro?"":`<input id="newGroup" list="groupList" placeholder="${all.length?"New group…":"Add a group, e.g. Morris family"}" autocomplete="off">`);
@@ -717,7 +755,7 @@ const firebaseConfig = {
     $("gpick").addEventListener("click",e=>{const b=e.target.closest("[data-g]");if(!b)return;const n=b.dataset.g;groups=groups.includes(n)?groups.filter(x=>x!==n):[...groups,n];drawGroups();});
     const close=()=>{sh.innerHTML="";document.removeEventListener("keydown",onEsc);};function onEsc(e){if(e.key==="Escape")close();}
     document.addEventListener("keydown",onEsc);
-    $("pCancel").onclick=close;$("scrim").addEventListener("mousedown",e=>{if(e.target.id==="scrim")close();});
+    $("pCancel").onclick=close;if($("pLedger"))$("pLedger").onclick=()=>{close();state.sel=k;showTab("ledger",true);renderPeople();renderLedger();};$("scrim").addEventListener("mousedown",e=>{if(e.target.id==="scrim")close();});
     $("pForm").addEventListener("submit",async e=>{e.preventDefault();const ng=$("newGroup");if(ng&&ng.value.trim()&&!groups.includes(ng.value.trim()))groups.push(ng.value.trim());
       const name=isNew?$("pName").value.trim():p.name;if(!name){const er=$("pErr");er.hidden=false;er.textContent="Add a name.";return;}
       const pk=isNew?key(name):k;if(isNew&&state.people[pk]&&state.people[pk].name){const er=$("pErr");er.hidden=false;er.textContent=`${state.people[pk].name} is already on the list.`;return;}
@@ -754,13 +792,13 @@ const firebaseConfig = {
     return hits.length===1?hits[0]:null;}
   function openImport(){if(!state.canWrite||!state.db)return;let rows=[];
     const sh=$("sheetHost");sh.innerHTML=`<div class="scrim" id="scrim"><form class="sheet" id="iForm" role="dialog" aria-modal="true" aria-labelledby="iTitle" novalidate>
-      <h2 id="iTitle">Import birthdays and anniversaries</h2>
+      <div class="sheet-top"><h2 id="iTitle">Import dates</h2><button type="button" class="btn" id="iCancel">Cancel</button><button type="submit" class="btn primary" id="iSave" disabled>Import</button></div>
       <label for="iText"><span>Paste a list, one per line, like <span class="num">1/7: Bennet Amburgey</span> or <span class="num">8/22: Kayci &amp; Joey Plummer Anniversary</span>. Month headings and blank lines are skipped.</span>
         <textarea id="iText" style="min-height:140px" placeholder="1/7: Bennet Amburgey&#10;3/20: Whitney Morris&#10;8/22: Kayci &amp; Joey Plummer Anniversary"></textarea></label>
       <label for="iGroup">Also add new people to a group (optional)<input id="iGroup" list="groupList" placeholder="e.g. Family" autocomplete="off"></label>
       <div id="iPreview"></div>
       <div class="err" id="iErr" hidden></div>
-      <div class="sheet-actions"><div class="right"><button type="button" class="btn" id="iCancel">Cancel</button><button type="submit" class="btn primary" id="iSave" disabled>Import</button></div></div>
+
     </form></div>`;
     const close=()=>{sh.innerHTML="";document.removeEventListener("keydown",onEsc);};function onEsc(e){if(e.key==="Escape")close();}
     document.addEventListener("keydown",onEsc);$("iCancel").onclick=close;$("scrim").addEventListener("mousedown",e=>{if(e.target.id==="scrim")close();});
@@ -803,7 +841,7 @@ const firebaseConfig = {
   function openEvent(ev){if(!state.canWrite||!state.db)return;const isNew=!ev;ev=ev||{date:"",people:[],group:state.group||""};
     let picked=(ev.people||[]).slice();const groups=allGroups();
     const sh=$("sheetHost");sh.innerHTML=`<div class="scrim" id="scrim"><form class="sheet" id="eForm" role="dialog" aria-modal="true" aria-labelledby="eTitle" novalidate>
-      <h2 id="eTitle">${isNew?"Add an event":"Edit event"}</h2>
+      <div class="sheet-top"><h2 id="eTitle">${isNew?"Add an event":"Edit event"}</h2><button type="button" class="btn" id="evCancel">Cancel</button><button type="submit" class="btn primary" id="evSave">${isNew?"Add":"Save"}</button></div>
       ${state.space==="private"?`<div class="hint">This event goes on your private list. Only you will see it.</div>`:""}
       <label for="evName">Name<input id="evName" value="${esc(ev.title||"")}" placeholder="e.g. Sarah's 5th birthday party" autocomplete="off"></label>
       <div class="grid3">
@@ -817,10 +855,7 @@ const firebaseConfig = {
       ${groups.length?`<label for="evGroup">Or everyone in a group<select id="evGroup"><option value="">—</option>${groups.map(g=>`<option value="${esc(g.name)}" ${ev.group===g.name?"selected":""}>${esc(g.name)} (${g.count})</option>`).join("")}</select></label>`:""}
       <label for="evNotes">Notes<textarea id="evNotes" placeholder="Dress code, RSVP by, gift card OK…">${esc(ev.notes||"")}</textarea></label>
       <div class="err" id="evErr" hidden></div>
-      <div class="sheet-actions">
-        ${isNew?"":`<button type="button" class="btn danger" id="evDel">Delete</button>`}
-        <div class="right"><button type="button" class="btn" id="evCancel">Cancel</button><button type="submit" class="btn primary" id="evSave">${isNew?"Add event":"Save changes"}</button></div>
-      </div>
+      ${isNew?"":`<div class="sheet-actions"><button type="button" class="btn danger" id="evDel">Delete event</button></div>`}
     </form></div>`;
     function drawPeople(){const ppl=peopleSummary();
       $("evPeople").innerHTML=ppl.length?ppl.map(p=>`<button type="button" class="chip" data-pk="${esc(p.key)}" aria-pressed="${picked.includes(p.key)}">${esc(p.name)}</button>`).join(""):`<span class="hint">Add people with + Person first, or log a gift for them.</span>`;}
@@ -853,6 +888,18 @@ const firebaseConfig = {
   $("tabPrivate").addEventListener("click",()=>setSpace("private"));
   try{const sp=localStorage.getItem("gifted-space");if(sp==="private")state.space="private";}catch(e){}
 
+  /* ---------- section tabs ---------- */
+  const TABS=["upcoming","onway","check","people","ledger"];
+  function showTab(t,scroll){if(!TABS.includes(t))t="upcoming";state.tab=t;try{localStorage.setItem("gifted-tab",t);}catch(e){}
+    document.querySelectorAll("section[data-tab]").forEach(sec=>sec.hidden=sec.dataset.tab!==t);
+    $("secnav").querySelectorAll("[data-tab]").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t));
+    $("groupbar").hidden=t==="check";
+    if(scroll)window.scrollTo({top:0});}
+  $("secnav").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b)showTab(b.dataset.tab,true);});
+  try{showTab(localStorage.getItem("gifted-tab")||"upcoming");}catch(e){showTab("upcoming");}
+  /* Safari ignores user-scalable=no, so block its pinch gesture directly */
+  ["gesturestart","gesturechange"].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
+
   /* ---------- events ---------- */
   $("addBtn").onclick=()=>openGift(null);
   $("addPersonBtn").onclick=()=>openPerson(null);
@@ -862,13 +909,14 @@ const firebaseConfig = {
   ["chkWho","chkWhat"].forEach(id=>$(id).addEventListener("input",renderCheck));
   $("groupbar").addEventListener("click",e=>{const b=e.target.closest("[data-group]");if(!b)return;state.group=b.dataset.group;state.sel="";renderGroups();renderRuns();renderPeople();renderLedger();});
   $("people").addEventListener("click",e=>{const t=e.target.closest("[data-person]");if(!t)return;const k=t.dataset.person;
-    if(state.sel===k){openPerson(k);}else{state.sel=k;renderPeople();renderLedger();}});
+    openPerson(k);});
   $("onway").addEventListener("click",e=>{const a=e.target.closest("[data-adv]");if(a){advance(a.dataset.adv,a.dataset.to);return;}
     const ed=e.target.closest("[data-edit]");if(ed)openGift(state.gifts.find(g=>g.id===ed.dataset.edit));});
   $("runs").addEventListener("click",e=>{const a=e.target.closest("[data-adv]");if(a){advance(a.dataset.adv,a.dataset.to);return;}
     const ed=e.target.closest("[data-edit]");if(ed){openGift(state.gifts.find(g=>g.id===ed.dataset.edit));return;}
     const ee=e.target.closest("[data-evedit]");if(ee){openEvent(state.events.find(x=>x.id===ee.dataset.evedit));return;}
     const af=e.target.closest("[data-addfor]");if(af)openGift(null,{recipient:af.dataset.addfor,due:af.dataset.due,occasion:af.dataset.occ});});
+  $("selBar").addEventListener("click",e=>{if(e.target.closest('[data-act="unsel"]')){state.sel="";renderPeople();renderLedger();}});
   $("ledger").addEventListener("click",e=>{const ed=e.target.closest("[data-edit]");if(ed){openGift(state.gifts.find(g=>g.id===ed.dataset.edit));return;}
     const a=e.target.closest("[data-act]");if(!a)return;if(a.dataset.act==="add")openGift(null);if(a.dataset.act==="clear"){state.sel="";state.group="";["fSearch","fStatus","fYear","fOcc"].forEach(id=>$(id).value="");renderAll();}});
 
