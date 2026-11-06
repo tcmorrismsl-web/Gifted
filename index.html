@@ -920,6 +920,19 @@ const firebaseConfig = {
   $("ledger").addEventListener("click",e=>{const ed=e.target.closest("[data-edit]");if(ed){openGift(state.gifts.find(g=>g.id===ed.dataset.edit));return;}
     const a=e.target.closest("[data-act]");if(!a)return;if(a.dataset.act==="add")openGift(null);if(a.dataset.act==="clear"){state.sel="";state.group="";["fSearch","fStatus","fYear","fOcc"].forEach(id=>$(id).value="");renderAll();}});
 
+  /* ---------- auto-update ----------
+     GitHub Pages lets phones keep a saved copy for up to 10 minutes. On open, and whenever the app comes back
+     to the screen, check version.json (never cached) and load the new version if there is one. */
+  const APP_VERSION="2026-11-06.2";
+  async function checkUpdate(){
+    try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)return;const j=await r.json();
+      if(!j.v||j.v===APP_VERSION)return;
+      if(new URLSearchParams(location.search).get("v")===j.v)return;
+      if($("sheetHost").innerHTML){setTimeout(checkUpdate,30000);return;}
+      location.replace(location.pathname+"?v="+encodeURIComponent(j.v));}catch(e){}}
+  checkUpdate();
+  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")checkUpdate();});
+
   /* ---------- boot: Firebase ---------- */
   const app=initializeApp(firebaseConfig);
   let fdb;

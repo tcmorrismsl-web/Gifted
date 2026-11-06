@@ -48,4 +48,4 @@ Gift statuses: Idea → Bought → Wrapped/ready → Given.
 
 ## Updating
 
-Edit `index.html`, commit and push to `main`. GitHub Pages republishes within a minute or two.
+Edit `index.html`, set `APP_VERSION` in it and `v` in `version.json` to the same new value, then commit and push to `main`. GitHub Pages republishes within a minute or two. Phones may hold a saved copy for up to 10 minutes, but the page checks `version.json` whenever it opens or comes back on screen and reloads itself when the version changes.
