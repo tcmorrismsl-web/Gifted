@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Wish list</title>
+<link rel="icon" type="image/png" href="icon-192.png?v=globe">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=globe">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Same colors and type as the Gifted app */
+:root{
+  --bg:#f2f4f7; --surface:#ffffff; --sunk:#e8ecf1; --fg:#17223a; --muted:#5b6579; --line:#d5dbe4;
+  --accent:#b3264a; --accent-fg:#ffffff; --accent-soft:#f7e3e8;
+  --ok:#1f7a4d; --ok-soft:#dff1e7; --warn:#9a5b00; --warn-soft:#fbeed6; --idea:#4a5876; --idea-soft:#e4e8f0; --ready:#1d5fa8; --ready-soft:#dfeafa;
+  --shadow:0 1px 2px rgba(23,34,58,.06),0 8px 24px rgba(23,34,58,.06);
+  --display:"Young Serif",Georgia,"Times New Roman",serif;
+  --body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10172a; --surface:#18213a; --sunk:#0c1222; --fg:#e7ebf3; --muted:#9aa4b9; --line:#2a3552;
+  --accent:#f0708f; --accent-fg:#1a0b10; --accent-soft:#3a1f2b;
+  --ok:#6ad3a0; --ok-soft:#173a2b; --warn:#f2b85b; --warn-soft:#3b2d14; --idea:#aab6d3; --idea-soft:#253150; --ready:#7fb4f2; --ready-soft:#1a2f4f;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10172a; --surface:#18213a; --sunk:#0c1222; --fg:#e7ebf3; --muted:#9aa4b9; --line:#2a3552;
+  --accent:#f0708f; --accent-fg:#1a0b10; --accent-soft:#3a1f2b;
+  --ok:#6ad3a0; --ok-soft:#173a2b; --warn:#f2b85b; --warn-soft:#3b2d14; --idea:#aab6d3; --idea-soft:#253150; --ready:#7fb4f2; --ready-soft:#1a2f4f;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25); color-scheme:dark}
+
+*{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.5}
+[hidden]{display:none!important}
+.wrap{max-width:720px;margin:0 auto;padding-block:32px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:20px}
+.eyebrow{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+h1{font-family:var(--display);font-weight:400;font-size:2.2rem;line-height:1.1;margin:4px 0 0;text-wrap:balance}
+.lead{color:var(--muted);margin-top:8px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;position:relative}
+.card::before{content:"";position:absolute;inset:0 auto 0 0;width:6px;background:repeating-linear-gradient(180deg,var(--accent) 0 10px,transparent 10px 16px)}
+.item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 14px;align-items:center;padding:14px 18px 14px 26px;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.name{font-weight:600;overflow-wrap:anywhere}
+.meta{font-size:.88rem;color:var(--muted);overflow-wrap:anywhere}
+.price{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:.92rem;white-space:nowrap}
+.pill{display:inline-block;font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);margin-left:6px;vertical-align:1px;white-space:nowrap}
+.btn{display:inline-block;text-decoration:none;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:8px;padding:6px 12px;font-weight:500;font-size:.88rem}
+.btn:hover{border-color:var(--muted)}
+.side{display:grid;gap:6px;justify-items:end}
+.empty{padding:32px 24px;text-align:center;color:var(--muted)}
+.foot{font-size:.82rem;color:var(--muted)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <div class="eyebrow">Gift ideas</div>
+    <h1 id="title">Wish list</h1>
+    <div class="lead" id="lead">Loading…</div>
+  </header>
+  <div class="card" id="list" hidden></div>
+  <div class="foot" id="foot" hidden>Shared from Gifted. This list keeps itself up to date, so it's worth checking again closer to the day.</div>
+</main>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, getDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const app=initializeApp({
+  apiKey: "AIzaSyAm4UbUAlaICG4ZZAg5PBvJ8S11MEPUBwI",
+  authDomain: "gifted-46f0f.firebaseapp.com",
+  projectId: "gifted-46f0f",
+  storageBucket: "gifted-46f0f.firebasestorage.app",
+  messagingSenderId: "878704287024",
+  appId: "1:878704287024:web:4d7870d2fc52a2c8507cf5"
+});
+const db=getFirestore(app);
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money=n=>n==null||n===""||isNaN(n)?"":"$"+Number(n).toLocaleString(undefined,{minimumFractionDigits:Number(n)%1?2:0,maximumFractionDigits:2});
+function safeLink(u){u=String(u||"").trim();if(!u)return"";if(!/^https?:\/\//i.test(u))u="https://"+u;try{const x=new URL(u);return x.protocol.startsWith("http")?x.href:"";}catch(e){return"";}}
+const host=u=>{try{return new URL(u).hostname.replace(/^www\./,"");}catch(e){return"link";}};
+function gone(){$("title").textContent="Wish list not found";$("lead").textContent="This link doesn't work. It may have been copied wrong, or the list was removed. Ask whoever sent it for a new link.";$("list").hidden=true;$("foot").hidden=true;}
+const id=new URLSearchParams(location.search).get("l");
+if(!id||!/^[a-z0-9]{10,40}$/.test(id))gone();
+else getDoc(doc(db,"wishlists",id)).then(snap=>{
+  if(!snap.exists()){gone();return;}
+  const name=snap.data().name||"Someone";
+  document.title=name+"'s wish list";$("title").textContent=name+"'s wish list";$("lead").textContent="Gift ideas for "+name+". Tap View to see the exact item.";
+  onSnapshot(collection(db,"wishlists",id,"items"),s=>{
+    const items=s.docs.map(d=>d.data()).sort((a,b)=>(b.priority==="want")-(a.priority==="want")||String(a.createdAt||"").localeCompare(String(b.createdAt||"")));
+    const el=$("list");el.hidden=false;$("foot").hidden=false;
+    el.innerHTML=items.length?items.map(it=>{const link=safeLink(it.link);return `<div class="item">
+      <div><div class="name">${esc(it.item)}${it.priority==="want"?`<span class="pill">Really wants</span>`:""}</div>${it.notes?`<div class="meta">${esc(it.notes)}</div>`:""}${link?`<div class="meta">${esc(host(link))}</div>`:""}</div>
+      <div class="side">${it.price!=null&&it.price!==""?`<span class="price">${money(it.price)}</span>`:""}${link?`<a class="btn" href="${esc(link)}" target="_blank" rel="noopener">View</a>`:""}</div>
+    </div>`;}).join(""):`<div class="empty">No ideas on this list yet. Check back soon.</div>`;
+  },()=>gone());
+},()=>gone());
+</script>
+</body>
+</html>

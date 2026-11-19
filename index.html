@@ -170,6 +170,21 @@ label.opt input{width:18px;height:18px;margin:0;accent-color:var(--accent)}
 .imp-table select{padding:4px 6px;font-size:.82rem}
 .imp-table tr.skip td{opacity:.5}
 .linkbtn{border:0;background:none;color:var(--accent);font-weight:600;cursor:pointer;padding:0}
+.wl-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:10px 16px;border-top:1px solid var(--line)}
+.wl-row .what{min-width:0;overflow-wrap:anywhere}
+.wl-row .what small{display:block;color:var(--muted);font-size:.8rem}
+.wl-row .what a{color:var(--accent)}
+.wl-row .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.pill.want{background:var(--accent-soft);color:var(--accent)}
+.wl-foot{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--line);background:var(--sunk)}
+.grow{display:grid;gap:8px;padding:12px 0;border-top:1px solid var(--line)}
+.grow:first-of-type{border-top:0}
+.grow-head{display:flex;gap:8px;align-items:end}
+.grow-head label{flex:1}
+.mchips{display:flex;flex-wrap:wrap;gap:6px}
+.mchip{display:inline-flex;align-items:center;gap:4px;font-size:.8rem;padding:2px 4px 2px 10px;border-radius:999px;background:var(--sunk)}
+.mchip button{border:0;background:none;cursor:pointer;color:var(--muted);font-size:1rem;line-height:1;padding:0 6px}
+.mchip button:hover{color:var(--accent)}
 .run-missing{padding:10px 16px;border-top:1px dashed var(--line);background:var(--sunk);display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:.88rem}
 .run-missing .lab{color:var(--warn);font-weight:600}
 .addfor{border:1px dashed var(--muted);background:transparent;border-radius:999px;padding:2px 10px;cursor:pointer;font-size:.82rem}
@@ -306,10 +321,11 @@ label.opt input{width:18px;height:18px;margin:0;accent-color:var(--accent)}
 
   <nav class="secnav" id="secnav" role="tablist" aria-label="Sections">
     <button role="tab" data-tab="upcoming" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Upcoming</span><span class="badge" id="badgeUp" hidden></span></button>
-    <button role="tab" data-tab="onway" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg><span>On the way</span><span class="badge" id="badgeOw" hidden></span></button>
+    <button role="tab" data-tab="onway" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg><span class="long">On the way</span><span class="short">Shipping</span><span class="badge" id="badgeOw" hidden></span></button>
     <button role="tab" data-tab="check" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21M7.8 10.6l2 2 3.6-3.8"/></svg><span class="long">Before you buy</span><span class="short">Check</span></button>
     <button role="tab" data-tab="people" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.3-5.5 6.5-5.5s5.7 2 6.5 5.5"/><circle cx="17" cy="9" r="2.6"/><path d="M16.5 14.6c2.6.2 4.4 2 5 5"/></svg><span>People</span></button>
     <button role="tab" data-tab="ledger" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg><span>Ledger</span></button>
+    <button role="tab" data-tab="wish" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="9" width="18" height="12" rx="1.5"/><path d="M2 9h20M12 9v12M12 9c-1.5-3.5-6-4.5-6-1.5S11 9 12 9zM12 9c1.5-3.5 6-4.5 6-1.5S13 9 12 9z"/></svg><span class="long">Wish lists</span><span class="short">Wishes</span></button>
   </nav>
 
   <nav class="groupbar" id="groupbar" aria-label="Groups"></nav>
@@ -355,6 +371,14 @@ label.opt input{width:18px;height:18px;margin:0;accent-color:var(--accent)}
     <div class="people" id="people"></div>
   </section>
 
+  <section aria-labelledby="wishTitle" id="wishSection" data-tab="wish" hidden>
+    <div class="section-head">
+      <h2 id="wishTitle">Wish lists</h2>
+      <span class="muted">Gift ideas for people in our house. Share a list with anyone who asks what to get. <button class="linkbtn" id="newWishBtn" hidden>+ New wish list</button></span>
+    </div>
+    <div class="runs" id="wishlists"></div>
+  </section>
+
   <section aria-labelledby="ledgerTitle" id="ledgerSection" data-tab="ledger" hidden>
     <div class="section-head">
       <h2 id="ledgerTitle">Ledger</h2>
@@ -397,7 +421,7 @@ const firebaseConfig = {
   const OCCASIONS=["Christmas","Birthday","Birthday party","Holiday","Thanksgiving","Hanukkah","Easter","Anniversary","Valentine's Day","Mother's Day","Father's Day","Graduation","Wedding","Baby shower","Bridal shower","Housewarming","Retirement","Teacher gift","Thank you","Just because"];
   const STATUS={idea:"Idea",bought:"Bought",ready:"Ready",given:"Given"};
   const NEXT={idea:["bought","Mark bought"],bought:["ready","Mark wrapped"],ready:["given","Mark given"]};
-  const state={space:"shared",shared:[],priv:[],events:[],sharedEvents:[],privEvents:[],eventsBlocked:false,rulesOk:null,gifts:[],people:{},givers:["Tyler","Both"],sel:"",group:"",canWrite:true,db:null,user:null,uid:null,loaded:false,busy:new Set()};
+  const state={wishlists:[],wishItems:{},wishBlocked:false,space:"shared",shared:[],priv:[],events:[],sharedEvents:[],privEvents:[],eventsBlocked:false,rulesOk:null,gifts:[],people:{},givers:["Tyler","Both"],sel:"",group:"",canWrite:true,db:null,user:null,uid:null,loaded:false,busy:new Set()};
   const $=id=>document.getElementById(id);
   const allGifts=()=>state.shared.concat(state.priv);
   const giftCol=()=>state.space==="private"?"private/"+state.uid+"/gifts":"gifts";
@@ -453,9 +477,10 @@ const firebaseConfig = {
     return allGifts().some(g=>{if(key(g.recipient)!==pk)return false;const gd=g.due||g.date;if(!gd||String(gd).length!==10)return false;const n=daysUntil(gd);return n>=lo&&n<=hi;});}
   function eventPeople(ev){const out=[];const seen=new Set();
     for(const k of ev.people||[]){const info=state.people[k];if(info&&info.account&&info.account===state.uid)continue;if(!seen.has(k)){seen.add(k);out.push(k);}}
-    if(ev.group)for(const m of membersOf(ev.group))if(!seen.has(m.key)&&datesHere(state.people[m.key])){seen.add(m.key);out.push(m.key);}
+    for(const g of evGroupsOf(ev))for(const m of membersOf(g))if(!seen.has(m.key)&&datesHere(state.people[m.key])){seen.add(m.key);out.push(m.key);}
     return out;}
   const evLabel=ev=>ev.title||ev.kind||"Event";
+  const evGroupsOf=e=>Array.isArray(e.groups)?e.groups:(e.group?[e.group]:[]);
   function fmtTime(t){if(!/^\d{2}:\d{2}$/.test(t||""))return"";const [h,m]=t.split(":").map(Number);return new Date(2000,0,1,h,m).toLocaleTimeString(undefined,{hour:"numeric",minute:m?"2-digit":undefined});}
   const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const key=n=>String(n||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"unknown";
@@ -498,7 +523,7 @@ const firebaseConfig = {
   function renderGroups(){const gs=allGroups();const el=$("groupbar");
     if(state.group&&!gs.some(g=>g.name===state.group))state.group="";
     if(!gs.length){el.innerHTML=`<span class="hint">Put people in groups (family, coworkers, teachers…) from their card, then filter everything by group here.</span>`;return;}
-    el.innerHTML=`<button class="chip" data-group="" aria-pressed="${!state.group}">Everyone</button>`+gs.map(g=>`<button class="chip" data-group="${esc(g.name)}" aria-pressed="${state.group===g.name}">${esc(g.name)}<span>${g.count}</span></button>`).join("");}
+    el.innerHTML=`<button class="chip" data-group="" aria-pressed="${!state.group}">Everyone</button>`+gs.map(g=>`<button class="chip" data-group="${esc(g.name)}" aria-pressed="${state.group===g.name}">${esc(g.name)}<span>${g.count}</span></button>`).join("")+(state.canWrite&&state.db?`<button class="linkbtn" data-manage="1">Manage groups</button>`:"");}
 
   /* ---------- render: upcoming ---------- */
   function renderOnWay(){const sec=$("owSection");
@@ -519,7 +544,7 @@ const firebaseConfig = {
     const dated=state.gifts.filter(g=>g.due&&inGroup(g.recipient));
     const buckets={};for(const g of dated)(buckets[g.due]??=[]).push(g);
     const evs={};for(const e of personEvents()){(evs[e.date]??=[]).push(e);buckets[e.date]??=[];}
-    const uevs={};for(const e of state.events){if(!e.date||e.date<t)continue;if(state.group&&e.group!==state.group&&!(e.people||[]).some(k=>groupsOf(k).includes(state.group)))continue;(uevs[e.date]??=[]).push(e);buckets[e.date]??=[];}
+    const uevs={};for(const e of state.events){if(!e.date||e.date<t)continue;if(state.group&&!evGroupsOf(e).includes(state.group)&&!(e.people||[]).some(k=>groupsOf(k).includes(state.group)))continue;(uevs[e.date]??=[]).push(e);buckets[e.date]??=[];}
     const blocked=state.space==="shared"&&state.eventsBlocked?`<div class="private-note bad">Events can't be saved on Household yet. Paste the updated firestore.rules into Firebase (Firestore Database → Rules → Publish).</div>`:"";
     const keys=Object.keys(buckets).filter(d=>d>=t||buckets[d].some(g=>g.status!=="given")).sort();
     const noDue=state.gifts.filter(g=>!g.due&&(g.status==="bought"||g.status==="ready")&&inGroup(g.recipient));
@@ -609,7 +634,7 @@ const firebaseConfig = {
     if(m.length){v.className="verdict hit";v.innerHTML=`<strong>Heads up: ${esc(theirs[0]?.recipient||who)} may already have something like this.</strong><ul>${m.slice(0,5).map(x=>`<li>${esc(x.g.item)} <span>${x.g._priv?"· on your private list ":""}· ${STATUS[x.g.status]||""} · ${esc(x.g.occasion||"")} ${esc(fmtDate(x.g))}${x.g.from?" · from "+esc(x.g.from):""}</span></li>`).join("")}</ul>`;}
     else if(!theirs.length){v.className="verdict clear";v.innerHTML=`<strong>Clear.</strong> Nothing logged for ${esc(who)} yet, so there's nothing to repeat.`;}
     else{v.className="verdict clear";v.innerHTML=`<strong>Clear to buy.</strong> Nothing similar among the ${theirs.length} thing${theirs.length===1?"":"s"} logged for ${esc(theirs[0].recipient)}.`;}}
-  function renderAll(){renderGroups();renderDatalists();renderFilters();renderRuns();renderPeople();renderLedger();renderCheck();const show=state.canWrite&&state.loaded&&!!state.db;$("addBtn").hidden=!show;$("addPersonBtn").hidden=!show;$("addEventBtn").hidden=!show;$("importBtn").hidden=!show;}
+  function renderAll(){renderGroups();renderDatalists();renderFilters();renderRuns();renderPeople();renderLedger();renderCheck();renderWish();const show=state.canWrite&&state.loaded&&!!state.db;$("addBtn").hidden=!show;$("addPersonBtn").hidden=!show;$("addEventBtn").hidden=!show;$("importBtn").hidden=!show;}
 
   /* ---------- quick advance ---------- */
   async function advance(id,to){const g=state.gifts.find(x=>x.id===id);if(!g||state.busy.has(id))return;state.busy.add(id);renderRuns();
@@ -745,6 +770,7 @@ const firebaseConfig = {
       </div>
       <label for="pNotes">Notes (sizes, likes, already has…)<textarea id="pNotes" ${ro?"disabled":""}>${esc(info.notes||"")}</textarea></label>
       <div class="err" id="pErr" hidden></div>
+      ${!isNew&&!ro?`<div class="sheet-actions"><button type="button" class="btn danger" id="pDel">Delete person</button></div>`:""}
 
     </form></div>`;
     function drawGroups(){const all=[...new Set([...allGroups().map(x=>x.name),...groups])].sort((a,b)=>a.localeCompare(b));
@@ -755,6 +781,16 @@ const firebaseConfig = {
     $("gpick").addEventListener("click",e=>{const b=e.target.closest("[data-g]");if(!b)return;const n=b.dataset.g;groups=groups.includes(n)?groups.filter(x=>x!==n):[...groups,n];drawGroups();});
     const close=()=>{sh.innerHTML="";document.removeEventListener("keydown",onEsc);};function onEsc(e){if(e.key==="Escape")close();}
     document.addEventListener("keydown",onEsc);
+    if($("pDel")){let armed=false;$("pDel").onclick=async()=>{
+        const mine=allGifts().filter(g=>key(g.recipient)===k);const wl=state.wishlists.filter(w=>w.person===k);
+        if(!armed){armed=true;$("pDel").textContent=`Tap again to delete ${p.name}`+(mine.length?` and ${mine.length} gift${mine.length===1?"":"s"}`:"")+(wl.length?" and their wish list":"");return;}
+        $("pDel").disabled=true;
+        try{for(const g of mine)await state.db.doc(g._col+"/"+g.id).delete();
+          for(const ev of allEvents())if((ev.people||[]).includes(k))await state.db.doc(ev._col+"/"+ev.id).update({people:ev.people.filter(x=>x!==k)});
+          for(const w of wl){for(const it of state.wishItems[w.id]||[])await state.db.doc("wishlists/"+w.id+"/items/"+it.id).delete();await state.db.doc("wishlists/"+w.id).delete();}
+          if(state.people[k])await state.db.doc("people/"+k).delete();
+          if(state.sel===k)state.sel="";close();toast("Deleted "+p.name);}
+        catch(err){$("pDel").disabled=false;const er=$("pErr");er.hidden=false;er.textContent=errText(err);}};}
     $("pCancel").onclick=close;if($("pLedger"))$("pLedger").onclick=()=>{close();state.sel=k;showTab("ledger",true);renderPeople();renderLedger();};$("scrim").addEventListener("mousedown",e=>{if(e.target.id==="scrim")close();});
     $("pForm").addEventListener("submit",async e=>{e.preventDefault();const ng=$("newGroup");if(ng&&ng.value.trim()&&!groups.includes(ng.value.trim()))groups.push(ng.value.trim());
       const name=isNew?$("pName").value.trim():p.name;if(!name){const er=$("pErr");er.hidden=false;er.textContent="Add a name.";return;}
@@ -837,9 +873,112 @@ const firebaseConfig = {
       catch(err){$("iSave").disabled=false;const er=$("iErr");er.hidden=false;er.textContent=(done?`Saved ${done} before stopping. `:"")+errText(err);}});
     setTimeout(()=>$("iText").focus(),30);}
 
+  /* ---------- manage groups ---------- */
+  async function renameGroup(from,to){
+    for(const [k,p] of Object.entries(state.people)){const gs=p&&p.groups||[];if(!gs.includes(from))continue;const next=[...new Set(gs.map(x=>x===from?to:x).filter(Boolean))];await state.db.doc("people/"+k).update({groups:next});}
+    for(const ev of allEvents()){const gs=evGroupsOf(ev);if(!gs.includes(from))continue;await state.db.doc(ev._col+"/"+ev.id).update({groups:[...new Set(gs.map(x=>x===from?to:x).filter(Boolean))],group:""});}
+    if(state.group===from)state.group=to||"";}
+  function openGroups(){if(!state.canWrite||!state.db)return;
+    const sh=$("sheetHost");
+    function draw(){const gs=allGroups();
+      sh.innerHTML=`<div class="scrim" id="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mgTitle">
+        <div class="sheet-top"><h2 id="mgTitle">Groups</h2><button type="button" class="btn" id="mgClose">Close</button></div>
+        <div class="hint">Rename a group, take someone out of it, or delete it. Deleting a group doesn't delete the people in it. To add someone, open their card on the People tab.</div>
+        <div>${gs.length?gs.map((g,i)=>`<div class="grow">
+          <div class="grow-head"><label for="mg${i}">Name<input id="mg${i}" value="${esc(g.name)}" data-old="${esc(g.name)}" autocomplete="off"></label><button type="button" class="btn sm" data-ren="${i}">Rename</button><button type="button" class="btn danger sm" data-delg="${esc(g.name)}">Delete</button></div>
+          <div class="mchips">${membersOf(g.name).map(m=>`<span class="mchip">${esc(m.name)}<button type="button" data-rm="${esc(m.key)}" data-g="${esc(g.name)}" aria-label="Take ${esc(m.name)} out of ${esc(g.name)}">×</button></span>`).join("")}</div>
+        </div>`).join(""):`<div class="muted">No groups left.</div>`}</div>
+        <div class="err" id="mgErr" hidden></div>
+      </div></div>`;
+      $("mgClose").onclick=close;$("scrim").addEventListener("mousedown",e=>{if(e.target.id==="scrim")close();});}
+    const close=()=>{sh.innerHTML="";document.removeEventListener("keydown",onEsc);};function onEsc(e){if(e.key==="Escape")close();}
+    document.addEventListener("keydown",onEsc);
+    const fail=err=>{const e=$("mgErr");if(e){e.hidden=false;e.textContent=errText(err);}};
+    const armed=new Set();
+    sh.onclick=async e=>{
+      const r=e.target.closest("[data-ren]");if(r){const inp=$("mg"+r.dataset.ren);const from=inp.dataset.old,to=inp.value.trim();if(!to||to===from)return;r.disabled=true;try{await renameGroup(from,to);toast(`Renamed to ${to}`);setTimeout(draw,150);}catch(err){r.disabled=false;fail(err);}return;}
+      const d=e.target.closest("[data-delg]");if(d){const g=d.dataset.delg;if(!armed.has(g)){armed.add(g);d.textContent="Tap again";return;}d.disabled=true;try{await renameGroup(g,"");toast(`Deleted ${g}`);setTimeout(draw,150);}catch(err){d.disabled=false;fail(err);}return;}
+      const m=e.target.closest("[data-rm]");if(m){const k=m.dataset.rm,g=m.dataset.g;const p=state.people[k];if(!p)return;m.disabled=true;try{await state.db.doc("people/"+k).update({groups:(p.groups||[]).filter(x=>x!==g)});setTimeout(draw,150);}catch(err){m.disabled=false;fail(err);}}};
+    draw();}
+
+  /* ---------- wish lists ---------- */
+  function newToken(){const a=new Uint8Array(18);crypto.getRandomValues(a);return Array.from(a,b=>"abcdefghijklmnopqrstuvwxyz0123456789"[b%36]).join("");}
+  const wishUrl=w=>new URL("wish.html?l="+encodeURIComponent(w.id),location.href).href;
+  function renderWish(){const el=$("wishlists");$("newWishBtn").hidden=!(state.canWrite&&state.db);
+    const blocked=state.wishBlocked?`<div class="private-note bad">Wish lists need the updated database rules. Paste firestore.rules into Firebase (Firestore Database → Rules → Publish).</div>`:"";
+    const lists=state.wishlists.slice().sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+    if(!lists.length){el.innerHTML=blocked+`<div class="empty card"><h3>No wish lists yet</h3><div>Start a list for someone in your house, add gift ideas with links and sizes, then share it with family who ask what to get.</div>${state.canWrite&&state.db&&!state.wishBlocked?`<button class="btn primary" data-wnew="1">+ New wish list</button>`:""}</div>`;return;}
+    el.innerHTML=blocked+lists.map(w=>{const items=(state.wishItems[w.id]||[]).slice().sort((a,b)=>(b.priority==="want")-(a.priority==="want")||String(a.createdAt||"").localeCompare(String(b.createdAt||"")));
+      const info=state.people[w.person]||{};const mine=info.account&&info.account===state.uid;
+      return `<article class="run">
+        <div class="run-head" style="grid-template-columns:minmax(0,1fr) auto">
+          <div class="run-title"><h3>${esc(w.name)}'s wish list</h3><div class="when">${items.length} idea${items.length===1?"":"s"}</div></div>
+          <div class="ow-acts"><button class="btn sm" data-wshare="${esc(w.id)}">Share</button>${state.canWrite?`<button class="btn primary sm" data-wadd="${esc(w.id)}">+ Idea</button>`:""}</div>
+        </div>
+        ${items.length?items.map(it=>{const link=safeLink(it.link);return `<div class="wl-row">
+          <div class="what">${esc(it.item)}${it.priority==="want"?` <span class="pill want">Really wants</span>`:""}<small>${[it.price!=null&&it.price!==""?money(it.price):"",link?`<a href="${esc(link)}" target="_blank" rel="noopener">${esc(host(link))}</a>`:""].filter(Boolean).join(" · ")}</small>${it.notes?`<small>${esc(it.notes)}</small>`:""}</div>
+          <div class="acts">${state.canWrite&&!mine?`<button class="btn sm" data-wbuy="${esc(w.id)}|${esc(it.id)}">Log as gift</button>`:""}${state.canWrite?`<button class="btn ghost sm" data-wedit="${esc(w.id)}|${esc(it.id)}">Edit</button>`:""}</div>
+        </div>`;}).join(""):`<div class="wl-row"><div class="what muted">No ideas yet. Add a few so family has something to go on.</div></div>`}
+        ${state.canWrite?`<div class="wl-foot"><span class="hint">Anyone with the share link can see this list. They can't change it.</span><button class="btn ghost sm" data-wdel="${esc(w.id)}">Delete list</button></div>`:""}
+      </article>`;}).join("");}
+  function openNewWish(){const sh=$("sheetHost");
+    sh.innerHTML=`<div class="scrim" id="scrim"><form class="sheet" id="wnForm" role="dialog" aria-modal="true" aria-labelledby="wnTitle" novalidate>
+      <div class="sheet-top"><h2 id="wnTitle">New wish list</h2><button type="button" class="btn" id="wnCancel">Cancel</button><button type="submit" class="btn primary" id="wnSave">Create</button></div>
+      <label for="wnWho">Who is it for?<input id="wnWho" list="peopleList" placeholder="e.g. Luca Morris" autocomplete="off"></label>
+      <div class="hint">Make one for each person in your house. Family can open the list from a link without signing in.</div>
+      <div class="err" id="wnErr" hidden></div></form></div>`;
+    const close=()=>{sh.innerHTML="";};$("wnCancel").onclick=close;$("scrim").addEventListener("mousedown",e=>{if(e.target.id==="scrim")close();});
+    $("wnForm").addEventListener("submit",async e=>{e.preventDefault();const name=$("wnWho").value.trim();const er=$("wnErr");
+      if(!name){er.hidden=false;er.textContent="Type a name.";return;}
+      const pk=key(name);if(state.wishlists.some(w=>w.person===pk)){er.hidden=false;er.textContent=`${name} already has a wish list.`;return;}
+      const pname=(state.people[pk]&&state.people[pk].name)||name;$("wnSave").disabled=true;
+      try{await state.db.doc("wishlists/"+newToken()).set({person:pk,name:pname,createdAt:new Date().toISOString(),createdBy:state.uid,updatedAt:new Date().toISOString()});close();toast("Wish list created");}
+      catch(err){$("wnSave").disabled=false;er.hidden=false;er.textContent=err&&err.code==="permission-denied"?"Wish lists need the updated database rules. Paste firestore.rules into Firebase, then try again.":errText(err);}});
+    setTimeout(()=>$("wnWho").focus(),30);}
+  function openWishItem(wid,it){const w=state.wishlists.find(x=>x.id===wid);if(!w)return;const isNew=!it;it=it||{priority:"like"};let pri=it.priority||"like";
+    const sh=$("sheetHost");sh.innerHTML=`<div class="scrim" id="scrim"><form class="sheet" id="wiForm" role="dialog" aria-modal="true" aria-labelledby="wiTitle" novalidate>
+      <div class="sheet-top"><h2 id="wiTitle">${isNew?"Idea for "+esc(w.name):"Edit idea"}</h2><button type="button" class="btn" id="wiCancel">Cancel</button><button type="submit" class="btn primary" id="wiSave">Save</button></div>
+      <label for="wiItem">Idea<input id="wiItem" value="${esc(it.item||"")}" placeholder="What would they like?" autocomplete="off"></label>
+      <div class="grid2">
+        <label for="wiLink">Link (optional)<input id="wiLink" value="${esc(it.link||"")}" placeholder="https://…" autocomplete="off" inputmode="url"></label>
+        <label for="wiPrice">Price ($, optional)<input id="wiPrice" type="number" min="0" step="0.01" inputmode="decimal" value="${it.price??""}"></label>
+      </div>
+      <div><div class="eyebrow" style="margin-bottom:4px">How much</div><div class="seg" id="wiPri" role="group" aria-label="How much"><button type="button" data-p="like" aria-pressed="${pri!=="want"}">Would like</button><button type="button" data-p="want" aria-pressed="${pri==="want"}">Really wants</button></div></div>
+      <label for="wiNotes">Size, color or notes<textarea id="wiNotes" placeholder="Size 3T, the blue one, any brand…">${esc(it.notes||"")}</textarea></label>
+      <div class="err" id="wiErr" hidden></div>
+      ${isNew?"":`<div class="sheet-actions"><button type="button" class="btn danger" id="wiDel">Delete idea</button></div>`}
+    </form></div>`;
+    const close=()=>{sh.innerHTML="";};$("wiCancel").onclick=close;$("scrim").addEventListener("mousedown",e=>{if(e.target.id==="scrim")close();});
+    $("wiPri").addEventListener("click",e=>{const b=e.target.closest("[data-p]");if(!b)return;pri=b.dataset.p;[...$("wiPri").children].forEach(x=>x.setAttribute("aria-pressed",x===b));});
+    const col="wishlists/"+wid+"/items";const fail=err=>{const e=$("wiErr");e.hidden=false;e.textContent=errText(err);};
+    if(!isNew){let armed=false;$("wiDel").onclick=async()=>{if(!armed){armed=true;$("wiDel").textContent="Tap again to delete";return;}try{await state.db.doc(col+"/"+it.id).delete();close();toast("Idea deleted");}catch(err){fail(err);}};}
+    $("wiForm").addEventListener("submit",async e=>{e.preventDefault();const item=$("wiItem").value.trim();if(!item){const er=$("wiErr");er.hidden=false;er.textContent="Describe the idea.";return;}
+      const pr=$("wiPrice").value;const body={item,link:$("wiLink").value.trim(),price:pr===""?null:Math.round(Number(pr)*100)/100,priority:pri,notes:$("wiNotes").value.trim(),createdAt:it.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString(),updatedBy:state.uid};
+      $("wiSave").disabled=true;
+      try{if(isNew)await state.db.collection(col).add(body);else await state.db.doc(col+"/"+it.id).set(body);
+        await state.db.doc("wishlists/"+wid).update({updatedAt:new Date().toISOString()});close();toast(isNew?"Idea added":"Saved");}
+      catch(err){$("wiSave").disabled=false;fail(err);}});
+    setTimeout(()=>$("wiItem").focus(),30);}
+  async function shareWish(w){const url=wishUrl(w);const title=`${w.name}'s wish list`;
+    if(navigator.share){try{await navigator.share({title,text:`Gift ideas for ${w.name}`,url});return;}catch(e){if(e&&e.name==="AbortError")return;}}
+    try{await navigator.clipboard.writeText(url);toast("Link copied");return;}catch(e){}
+    const sh=$("sheetHost");sh.innerHTML=`<div class="scrim" id="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shTitle"><div class="sheet-top"><h2 id="shTitle">${esc(title)}</h2><button type="button" class="btn" id="shClose">Close</button></div><label for="shUrl">Copy this link and send it to family<input id="shUrl" readonly value="${esc(url)}"></label></div></div>`;
+    $("shClose").onclick=()=>sh.innerHTML="";const inp=$("shUrl");inp.focus();inp.select();}
+  $("newWishBtn").onclick=()=>openNewWish();
+  $("wishlists").addEventListener("click",async e=>{
+    if(e.target.closest("[data-wnew]")){openNewWish();return;}
+    const sb=e.target.closest("[data-wshare]");if(sb){const w=state.wishlists.find(x=>x.id===sb.dataset.wshare);if(w)shareWish(w);return;}
+    const ad=e.target.closest("[data-wadd]");if(ad){openWishItem(ad.dataset.wadd,null);return;}
+    const ed=e.target.closest("[data-wedit]");if(ed){const [wid,iid]=ed.dataset.wedit.split("|");openWishItem(wid,(state.wishItems[wid]||[]).find(x=>x.id===iid));return;}
+    const bu=e.target.closest("[data-wbuy]");if(bu){const [wid,iid]=bu.dataset.wbuy.split("|");const w=state.wishlists.find(x=>x.id===wid);const it=(state.wishItems[wid]||[]).find(x=>x.id===iid);if(!w||!it)return;
+      const info=state.people[w.person]||{};if(info.account&&info.account!==state.uid&&state.space!=="private")setSpace("private");
+      openGift(null,{recipient:w.name,item:it.item,link:it.link||"",price:it.price,status:"bought",notes:it.notes||""});return;}
+    const dl=e.target.closest("[data-wdel]");if(dl){if(dl.dataset.armed!=="1"){dl.dataset.armed="1";dl.textContent="Tap again to delete list";return;}
+      const wid=dl.dataset.wdel;dl.disabled=true;try{for(const it of state.wishItems[wid]||[])await state.db.doc("wishlists/"+wid+"/items/"+it.id).delete();await state.db.doc("wishlists/"+wid).delete();toast("Wish list deleted");}catch(err){dl.disabled=false;toast(errText(err));}}});
+
   /* ---------- event sheet ---------- */
-  function openEvent(ev){if(!state.canWrite||!state.db)return;const isNew=!ev;ev=ev||{date:"",people:[],group:state.group||""};
-    let picked=(ev.people||[]).slice();const groups=allGroups();
+  function openEvent(ev){if(!state.canWrite||!state.db)return;const isNew=!ev;ev=ev||{date:"",people:[],groups:state.group?[state.group]:[]};
+    let picked=(ev.people||[]).slice();let pickedGroups=evGroupsOf(ev).slice();const groups=allGroups();
     const sh=$("sheetHost");sh.innerHTML=`<div class="scrim" id="scrim"><form class="sheet" id="eForm" role="dialog" aria-modal="true" aria-labelledby="eTitle" novalidate>
       <div class="sheet-top"><h2 id="eTitle">${isNew?"Add an event":"Edit event"}</h2><button type="button" class="btn" id="evCancel">Cancel</button><button type="submit" class="btn primary" id="evSave">${isNew?"Add":"Save"}</button></div>
       ${state.space==="private"?`<div class="hint">This event goes on your private list. Only you will see it.</div>`:""}
@@ -852,7 +991,7 @@ const firebaseConfig = {
       <label for="evWhere">Where (optional)<input id="evWhere" value="${esc(ev.where||"")}" placeholder="Grandma's house" autocomplete="off"></label>
       <div><div class="eyebrow" style="margin-bottom:6px">Gifts needed for</div><div class="pchips" id="evPeople"></div>
         <div class="hint" style="margin-top:6px">Pick the people who should get a gift. They'll show up as "No gift yet" until one is logged. Leave it empty for an event you just want on the calendar.</div></div>
-      ${groups.length?`<label for="evGroup">Or everyone in a group<select id="evGroup"><option value="">—</option>${groups.map(g=>`<option value="${esc(g.name)}" ${ev.group===g.name?"selected":""}>${esc(g.name)} (${g.count})</option>`).join("")}</select></label>`:""}
+      ${groups.length?`<div><div class="eyebrow" style="margin-bottom:6px">And everyone in these groups</div><div class="pchips" id="evGroupPick"></div></div>`:""}
       <label for="evNotes">Notes<textarea id="evNotes" placeholder="Dress code, RSVP by, gift card OK…">${esc(ev.notes||"")}</textarea></label>
       <div class="err" id="evErr" hidden></div>
       ${isNew?"":`<div class="sheet-actions"><button type="button" class="btn danger" id="evDel">Delete event</button></div>`}
@@ -860,6 +999,9 @@ const firebaseConfig = {
     function drawPeople(){const ppl=peopleSummary();
       $("evPeople").innerHTML=ppl.length?ppl.map(p=>`<button type="button" class="chip" data-pk="${esc(p.key)}" aria-pressed="${picked.includes(p.key)}">${esc(p.name)}</button>`).join(""):`<span class="hint">Add people with + Person first, or log a gift for them.</span>`;}
     drawPeople();
+    function drawEvGroups(){const el=$("evGroupPick");if(!el)return;el.innerHTML=allGroups().map(g=>`<button type="button" class="chip" data-gk="${esc(g.name)}" aria-pressed="${pickedGroups.includes(g.name)}">${esc(g.name)}<span>${g.count}</span></button>`).join("");}
+    drawEvGroups();
+    if($("evGroupPick"))$("evGroupPick").addEventListener("click",e=>{const b=e.target.closest("[data-gk]");if(!b)return;const g=b.dataset.gk;pickedGroups=pickedGroups.includes(g)?pickedGroups.filter(x=>x!==g):[...pickedGroups,g];drawEvGroups();});
     $("evPeople").addEventListener("click",e=>{const b=e.target.closest("[data-pk]");if(!b)return;const k=b.dataset.pk;picked=picked.includes(k)?picked.filter(x=>x!==k):[...picked,k];drawPeople();});
     const close=()=>{sh.innerHTML="";document.removeEventListener("keydown",onEsc);};function onEsc(e){if(e.key==="Escape")close();}
     document.addEventListener("keydown",onEsc);
@@ -871,7 +1013,7 @@ const firebaseConfig = {
       const title=$("evName").value.trim(),kind=$("evKind").value.trim(),date=$("evDate").value;
       if(!date){showErr("Pick a date for the event.");return;}
       if(!title&&!kind){showErr("Give the event a name or a type.");return;}
-      const body={title,kind,date,time:$("evTime").value,where:$("evWhere").value.trim(),people:picked,group:$("evGroup")?$("evGroup").value:"",notes:$("evNotes").value.trim(),
+      const body={title,kind,date,time:$("evTime").value,where:$("evWhere").value.trim(),people:picked,groups:pickedGroups,group:"",notes:$("evNotes").value.trim(),
         createdAt:ev.createdAt||new Date().toISOString(),createdBy:ev.createdBy||state.uid,updatedAt:new Date().toISOString(),updatedBy:state.uid};
       $("evSave").disabled=true;
       try{if(isNew)await state.db.collection(col).add(body);else await state.db.doc(col+"/"+ev.id).set(body);close();toast(isNew?"Event added":"Saved");}
@@ -889,11 +1031,11 @@ const firebaseConfig = {
   try{const sp=localStorage.getItem("gifted-space");if(sp==="private")state.space="private";}catch(e){}
 
   /* ---------- section tabs ---------- */
-  const TABS=["upcoming","onway","check","people","ledger"];
+  const TABS=["upcoming","onway","check","people","ledger","wish"];
   function showTab(t,scroll){if(!TABS.includes(t))t="upcoming";state.tab=t;try{localStorage.setItem("gifted-tab",t);}catch(e){}
     document.querySelectorAll("section[data-tab]").forEach(sec=>sec.hidden=sec.dataset.tab!==t);
     $("secnav").querySelectorAll("[data-tab]").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t));
-    $("groupbar").hidden=t==="check";
+    $("groupbar").hidden=t==="check"||t==="wish";
     if(scroll)window.scrollTo({top:0});}
   $("secnav").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b)showTab(b.dataset.tab,true);});
   try{showTab(localStorage.getItem("gifted-tab")||"upcoming");}catch(e){showTab("upcoming");}
@@ -907,7 +1049,7 @@ const firebaseConfig = {
   $("importBtn").onclick=()=>openImport();
   ["fSearch","fStatus","fYear","fOcc"].forEach(id=>$(id).addEventListener("input",renderLedger));
   ["chkWho","chkWhat"].forEach(id=>$(id).addEventListener("input",renderCheck));
-  $("groupbar").addEventListener("click",e=>{const b=e.target.closest("[data-group]");if(!b)return;state.group=b.dataset.group;state.sel="";renderGroups();renderRuns();renderPeople();renderLedger();});
+  $("groupbar").addEventListener("click",e=>{if(e.target.closest("[data-manage]")){openGroups();return;}const b=e.target.closest("[data-group]");if(!b)return;state.group=b.dataset.group;state.sel="";renderGroups();renderRuns();renderPeople();renderLedger();});
   $("people").addEventListener("click",e=>{const t=e.target.closest("[data-person]");if(!t)return;const k=t.dataset.person;
     openPerson(k);});
   $("onway").addEventListener("click",e=>{const a=e.target.closest("[data-adv]");if(a){advance(a.dataset.adv,a.dataset.to);return;}
@@ -923,7 +1065,7 @@ const firebaseConfig = {
   /* ---------- auto-update ----------
      GitHub Pages lets phones keep a saved copy for up to 10 minutes. On open, and whenever the app comes back
      to the screen, check version.json (never cached) and load the new version if there is one. */
-  const APP_VERSION="2026-11-06.2";
+  const APP_VERSION="2026-11-18.1";
   async function checkUpdate(){
     try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)return;const j=await r.json();
       if(!j.v||j.v===APP_VERSION)return;
@@ -962,7 +1104,7 @@ const firebaseConfig = {
   $("signOutBtn").addEventListener("click",()=>signOut(auth));
 
   onAuthStateChanged(auth,u=>{
-    stopAll();state.gifts=[];state.shared=[];state.priv=[];state.events=[];state.sharedEvents=[];state.privEvents=[];state.eventsBlocked=false;state.rulesOk=null;state.people={};state.members={};state.loaded=false;state.denied=false;$("sheetHost").innerHTML="";
+    stopAll();state.wishlists=[];state.wishItems={};state.wishBlocked=false;state.gifts=[];state.shared=[];state.priv=[];state.events=[];state.sharedEvents=[];state.privEvents=[];state.eventsBlocked=false;state.rulesOk=null;state.people={};state.members={};state.loaded=false;state.denied=false;$("sheetHost").innerHTML="";
     if(!u){$("meBadge").hidden=true;state.db=null;showGate("Sign in with Google to see and add gifts.","Sign in with Google","");return;}
     $("gate").hidden=true;$("app").hidden=false;
     state.db=api;state.uid=u.uid;state.myFirst=String(u.displayName||"").trim().split(/\s+/)[0].toLowerCase();state.canWrite=true;
@@ -986,6 +1128,12 @@ const firebaseConfig = {
     /* Safety check: under the right rules, nobody can read another account's private list. */
     getDocsFromServer(collection(fdb,"private/rules-check/gifts")).then(()=>{state.rulesOk=false;renderSpace();},e=>{if(e&&e.code==="permission-denied"){state.rulesOk=true;renderSpace();}});
     unsubs.push(api.collection("people").onSnapshot(snap=>{const m={};snap.docs.forEach(d=>m[d.id]=d.data());state.people=m;renderAll();},onErr));
+    const wsubs={};unsubs.push(()=>{Object.values(wsubs).forEach(f=>{try{f();}catch(e){}});});
+    unsubs.push(api.collection("wishlists").onSnapshot(snap=>{state.wishBlocked=false;state.wishlists=snap.docs.map(d=>({id:d.id,...d.data()}));const ids=new Set(state.wishlists.map(w=>w.id));
+        for(const id of Object.keys(wsubs))if(!ids.has(id)){wsubs[id]();delete wsubs[id];delete state.wishItems[id];}
+        for(const id of ids)if(!wsubs[id])wsubs[id]=api.collection("wishlists/"+id+"/items").onSnapshot(sn=>{state.wishItems[id]=sn.docs.map(d=>({id:d.id,...d.data()}));renderWish();},()=>{});
+        renderWish();},
+      err=>{if(err&&err.code==="permission-denied"){state.wishBlocked=true;renderWish();}}));
     unsubs.push(api.collection("members").onSnapshot(snap=>{const m={};snap.docs.forEach(d=>m[d.id]=d.data());state.members=m;},()=>{}));
     unsubs.push(api.doc("meta/settings").onSnapshot(s=>{const d=s.exists?s.data():null;if(d&&Array.isArray(d.givers)&&d.givers.length){state.givers=d.givers;renderDatalists();}},()=>{}));
   });

@@ -26,6 +26,16 @@ service cloud.firestore {
       allow read, write: if isHousehold();
     }
 
+    // Wish lists: the household manages them; anyone with a list's secret link can view it (read only).
+    match /wishlists/{listId} {
+      allow get: if true;
+      allow list, write: if isHousehold();
+      match /items/{itemId} {
+        allow read: if true;
+        allow write: if isHousehold();
+      }
+    }
+
     // Who's who: everyone in the household can read; each account writes only its own entry.
     match /members/{uid} {
       allow read: if isHousehold();
